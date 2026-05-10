@@ -292,28 +292,6 @@
   .intro-item .intro-text::-webkit-scrollbar { width: 4px; }
   .intro-item .intro-text::-webkit-scrollbar-track { background: transparent; }
   .intro-item .intro-text::-webkit-scrollbar-thumb { background: #1C3454; border-radius: 2px; }
-  /* ─── Introduction Figure Images ─── */
-  .intro-figure-box {
-    margin: 12px 0;
-    padding: 10px;
-    background: rgba(14, 32, 48, 0.6);
-    border: 1px solid #1C3454;
-    border-radius: 6px;
-    text-align: center;
-  }
-  .intro-figure-label {
-    font-size: 11px;
-    color: #7BB8CC;
-    margin-bottom: 8px;
-    font-style: italic;
-  }
-  .intro-figure-img {
-    max-width: 100%;
-    max-height: 400px;
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-  }
-
   /* ─── Introduction Citation Links ─── */
   .intro-citation-link {
     color: #68D8B5;
@@ -2691,24 +2669,6 @@ function renderIntroductionList(pool) {
     if (p.code) links.push(`<a class="link link-arxiv" href="${escapeHtml(p.code)}" target="_blank">↗ Code</a>`);
 
     let intro = (p.introduction || "").trim();
-    
-    // Build figure gallery from extracted images
-    const figDir = 'references/figures/';
-    
-    // Replace figure references with embedded images
-    intro = intro.replace(/Figure\s+(\d+)(?::\s*([\s\S]*?))?(?=\n\s*\n|\n\s*[•\-\*\d]|\n\s*Figure|\n\s*Table|$)/gi, (match, num, caption) => {
-      const figFile = `${p.id}_fig${num}.png`;
-      const imgHtml = `<img src="${figDir}${figFile}" class="intro-figure-img" alt="Figure ${num}" onerror="this.style.display='none'" loading="lazy">`;
-      const cap = caption ? caption.trim().replace(/\s+/g, ' ').slice(0, 80) + (caption.trim().length > 80 ? '…' : '') : '';
-      return `<div class="intro-figure-box"><div class="intro-figure-label">Figure ${num}${cap ? ': ' + cap : ''}</div>${imgHtml}</div>`;
-    });
-    // Also handle "Fig." abbreviation
-    intro = intro.replace(/Fig\.\s+(\d+)(?::\s*([\s\S]*?))?(?=\n\s*\n|\n\s*[•\-\*\d]|\n\s*Fig|\n\s*Table|$)/gi, (match, num, caption) => {
-      const figFile = `${p.id}_fig${num}.png`;
-      const imgHtml = `<img src="${figDir}${figFile}" class="intro-figure-img" alt="Fig. ${num}" onerror="this.style.display='none'" loading="lazy">`;
-      const cap = caption ? caption.trim().replace(/\s+/g, ' ').slice(0, 80) + (caption.trim().length > 80 ? '…' : '') : '';
-      return `<div class="intro-figure-box"><div class="intro-figure-label">Fig. ${num}${cap ? ': ' + cap : ''}</div>${imgHtml}</div>`;
-    });
     
     // Convert citation references [N] to clickable links that open in right panel
     intro = intro.replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g, (match, citationList) => {
