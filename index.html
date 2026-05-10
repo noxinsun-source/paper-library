@@ -1,0 +1,3571 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paper Library</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+    background: #0D1B2A;
+    color: #C2DCF0;
+    line-height: 1.6;
+  }
+
+  /* ─── Layout ─── */
+  .app { display: flex; height: 100vh; }
+  .left {
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;
+    transition: flex 0.25s ease;
+  }
+  .right {
+    width: 0;
+    background: #1a1a1a;
+    border-left: 2px solid #02C39A;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.25s ease;
+  }
+  .app.split .left { flex: 0 0 50%; }
+  .app.split .right { width: 50%; }
+  .right-head {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    background: #0E2030;
+    border-bottom: 1px solid #1C3454;
+    font-size: 12px;
+    color: #7BB8CC;
+    gap: 10px;
+  }
+  .right-head .title {
+    flex: 1;
+    color: #FFFFFF;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .close-btn {
+    background: transparent;
+    border: 1px solid #1C3454;
+    color: #F87171;
+    padding: 3px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: inherit;
+  }
+  .close-btn:hover { border-color: #F87171; }
+  .close-btn kbd {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 5px;
+    font: 600 10px/1 ui-monospace, SFMono-Regular, monospace;
+    color: #A3B3C8;
+    background: rgba(28, 52, 84, 0.6);
+    border: 1px solid #1C3454;
+    border-bottom-width: 2px;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+    vertical-align: baseline;
+  }
+  .close-btn:hover kbd { color: #F87171; border-color: #F87171; }
+  .pdf-frame { flex: 1; border: none; background: #1a1a1a; }
+
+  header {
+    padding: 20px 36px 14px;
+    border-bottom: 1px solid #1A3048;
+    background: linear-gradient(180deg, #0E2030 0%, #0D1B2A 100%);
+  }
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  h1 { margin: 0 0 6px; font-size: 22px; color: #FFFFFF; font-weight: 700; }
+  header .sub { color: #6A9BBF; font-size: 12.5px; }
+  header .meta { color: #4B7A9E; font-size: 11.5px; margin-top: 3px; }
+
+  .actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .btn {
+    padding: 7px 14px;
+    font-size: 12.5px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 600;
+    border: 1px solid;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn-primary { background: #02C39A; color: #0D1B2A; border-color: #02C39A; }
+  .btn-primary:hover { filter: brightness(1.1); }
+  .btn-ghost { background: transparent; color: #7BB8CC; border-color: #1C3454; }
+  .btn-ghost:hover { color: #FFFFFF; border-color: #3381D4; }
+  .save-indicator {
+    font-size: 11px;
+    color: #6A9BBF;
+    min-width: 60px;
+    text-align: right;
+  }
+  .save-indicator.saving { color: #F6C344; }
+  .save-indicator.saved { color: #02C39A; }
+  .save-indicator.error { color: #F87171; }
+
+  .filters {
+    padding: 12px 36px;
+    border-bottom: 1px solid #1A3048;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    background: #0D1B2A;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .filters input {
+    flex: 1;
+    min-width: 180px;
+    padding: 7px 12px;
+    background: #0E2030;
+    border: 1px solid #1C3454;
+    color: #C2DCF0;
+    border-radius: 4px;
+    font-size: 12.5px;
+    outline: none;
+  }
+  .filters input:focus { border-color: #02C39A; }
+  .filter-btn {
+    padding: 5px 12px;
+    background: #0E2030;
+    border: 1px solid #1C3454;
+    color: #7BB8CC;
+    border-radius: 999px;
+    font-size: 11.5px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .filter-btn:hover { border-color: #3381D4; color: #FFFFFF; }
+  .filter-btn.active { background: #02C39A; color: #0D1B2A; border-color: #02C39A; font-weight: 600; }
+
+  .filter-divider {
+    width: 1px;
+    height: 18px;
+    background: #1C3454;
+    margin: 0 4px;
+  }
+  .view-toggle {
+    display: inline-flex;
+    background: #0E2030;
+    border: 1px solid #1C3454;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .view-toggle button {
+    padding: 5px 12px;
+    background: transparent;
+    border: none;
+    color: #7BB8CC;
+    font-size: 11.5px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .view-toggle button.active { background: #3381D4; color: #FFFFFF; font-weight: 600; }
+
+  /* ── Abstract List View ── */
+  .abstract-list { padding: 0 36px 40px; }
+  .abstract-item {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 20px;
+    padding: 18px 0;
+    border-bottom: 1px solid #1A3048;
+    transition: background 0.15s;
+  }
+  .abstract-item:hover { background: rgba(14, 32, 48, 0.4); }
+  .abstract-item:first-child { padding-top: 10px; }
+  .abstract-left { padding-left: 4px; }
+  .abstract-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #FFFFFF;
+    line-height: 1.4;
+    margin-bottom: 6px;
+  }
+  .abstract-short {
+    color: var(--accent, #02C39A);
+    margin-right: 6px;
+  }
+  .abstract-meta-row {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+  .abstract-links {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  .abstract-right {
+    color: #A3BFD4;
+    font-size: 12.5px;
+    line-height: 1.75;
+    padding-right: 4px;
+  }
+  .abstract-right .abstract-label {
+    color: #7BB8CC;
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  .abstract-text {
+    white-space: pre-wrap;
+    word-break: break-word;
+    cursor: text;
+    user-select: text;
+  }
+  .abstract-text-cn {
+    color: #E2E8F0;
+    line-height: 1.75;
+  }
+  .highlight-yellow {
+    background: linear-gradient(180deg, rgba(255, 235, 59, 0.35) 0%, rgba(255, 235, 59, 0.25) 100%);
+    border-bottom: 2px solid rgba(255, 235, 59, 0.6);
+    border-radius: 2px;
+    padding: 1px 2px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .highlight-yellow:hover {
+    background: linear-gradient(180deg, rgba(255, 235, 59, 0.5) 0%, rgba(255, 235, 59, 0.35) 100%);
+    border-bottom-color: rgba(255, 235, 59, 0.9);
+  }
+  .abstract-keywords {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed #1C3454;
+  }
+  .abstract-keywords .kw-tag {
+    display: inline-block;
+    background: rgba(2, 195, 154, 0.12);
+    border: 1px solid rgba(2, 195, 154, 0.25);
+    color: #68D8B5;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 10.5px;
+    margin-right: 5px;
+    margin-bottom: 4px;
+  }
+  .abstract-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: #4B7A9E;
+    font-size: 13px;
+  }
+  @media (max-width: 900px) {
+    .abstract-item { grid-template-columns: 1fr; gap: 12px; }
+  }
+
+  /* ── Introduction List View ── */
+  .intro-item .intro-text {
+    max-height: 320px;
+    overflow-y: auto;
+    padding-right: 8px;
+  }
+  .intro-item .intro-text::-webkit-scrollbar { width: 4px; }
+  .intro-item .intro-text::-webkit-scrollbar-track { background: transparent; }
+  .intro-item .intro-text::-webkit-scrollbar-thumb { background: #1C3454; border-radius: 2px; }
+  /* ─── Introduction Figure Images ─── */
+  .intro-figure-box {
+    margin: 12px 0;
+    padding: 10px;
+    background: rgba(14, 32, 48, 0.6);
+    border: 1px solid #1C3454;
+    border-radius: 6px;
+    text-align: center;
+  }
+  .intro-figure-label {
+    font-size: 11px;
+    color: #7BB8CC;
+    margin-bottom: 8px;
+    font-style: italic;
+  }
+  .intro-figure-img {
+    max-width: 100%;
+    max-height: 400px;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+
+  /* ─── Introduction Citation Links ─── */
+  .intro-citation-link {
+    color: #68D8B5;
+    text-decoration: none;
+    border-bottom: 1px dashed rgba(104, 216, 181, 0.4);
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+  .intro-citation-link:hover {
+    color: #02C39A;
+    border-bottom: 1px solid #02C39A;
+    background: rgba(2, 195, 154, 0.1);
+    border-radius: 2px;
+    padding: 0 2px;
+  }
+
+  .meta-row {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin: 2px 0 6px;
+  }
+  .venue-badge,
+  .ccf-badge,
+  .track-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 1px 6px;
+    font-size: 9.5px;
+    border-radius: 2px;
+    vertical-align: middle;
+    font-weight: 600;
+  }
+  .venue-badge.conference { background: #122C3E; color: #67E8F9; }
+  .venue-badge.journal    { background: #1F2B16; color: #A7F3D0; }
+  .venue-badge.preprint   { background: #312516; color: #FCD34D; }
+  .venue-badge.workshop   { background: #2F2348; color: #C4B5FD; }
+  .venue-badge.submission { background: #2A2430; color: #D8B4FE; }
+  .venue-badge.other      { background: #1C3454; color: #B8C7D9; }
+  .ccf-badge.rank-a { background: #0C3B2F; color: #5EEAD4; border: 1px solid rgba(94,234,212,0.25); }
+  .ccf-badge.rank-b { background: #122B45; color: #93C5FD; border: 1px solid rgba(147,197,253,0.25); }
+  .ccf-badge.rank-c { background: #342A14; color: #FCD34D; border: 1px solid rgba(252,211,77,0.25); }
+  .ccf-badge.rank-na { background: #2A2530; color: #D1D5DB; border: 1px solid rgba(209,213,219,0.18); }
+  .track-badge.main { background: #0C3B2F; color: #99F6E4; }
+  .track-badge.journal { background: #1F2B16; color: #BBF7D0; }
+  .track-badge.findings { background: #2A2848; color: #C4B5FD; }
+  .track-badge.workshop { background: #302348; color: #D8B4FE; }
+  .track-badge.demo { background: #263247; color: #93C5FD; }
+  .track-badge.submission { background: #30222A; color: #FDA4AF; }
+  .track-badge.preprint { background: #312516; color: #FCD34D; }
+  .track-badge.other { background: #1C3454; color: #B8C7D9; }
+
+  .org-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 1px 6px;
+    font-size: 9.5px;
+    border-radius: 2px;
+    margin-right: 4px;
+    vertical-align: middle;
+    font-weight: 600;
+  }
+  .org-badge.company { background: #2D1E3A; color: #C084FC; }
+  .org-badge.school  { background: #112A3A; color: #60A5FA; }
+  .org-badge.lab     { background: #2B1F14; color: #FBBF24; }
+
+  main { padding: 14px 36px 40px; }
+  .section { margin-top: 22px; }
+  .section-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #1A3048;
+  }
+  .section-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .section-title { font-size: 15px; color: #FFFFFF; font-weight: 600; }
+  .section-tag { color: #6A9BBF; font-size: 11.5px; font-style: italic; }
+  .section-count { color: #4B7A9E; font-size: 11px; margin-left: auto; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+  }
+  .card {
+    background: #0E2030;
+    border: 1px solid #1C3454;
+    border-radius: 6px;
+    overflow: hidden;
+    transition: all 0.15s;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  .card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+  }
+  .card.active {
+    border-color: var(--accent);
+    border-width: 2px;
+    box-shadow: 0 0 0 3px rgba(2, 195, 154, 0.25), 0 8px 20px rgba(0,0,0,0.5);
+    background: #122943;
+  }
+  .card.active::before {
+    content: "▶ 阅读中";
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: var(--accent);
+    color: #0D1B2A;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 3px;
+    z-index: 2;
+    letter-spacing: 0.5px;
+  }
+  .card-thumb {
+    width: 100%;
+    aspect-ratio: 8.5 / 11;
+    max-height: 200px;
+    object-fit: cover;
+    object-position: top center;
+    background: #1C3454;
+    cursor: pointer;
+    border-bottom: 1px solid #1C3454;
+    display: block;
+  }
+  .card-thumb-placeholder {
+    width: 100%;
+    aspect-ratio: 8.5 / 11;
+    max-height: 200px;
+    background: #1C3454;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #4B7A9E;
+    font-size: 11px;
+  }
+  .card-thumb-wrap {
+    position: relative;
+    border-bottom: 1px solid #1C3454;
+    background: #1C3454;
+  }
+  .card-thumb-wrap .card-thumb,
+  .card-thumb-wrap .card-thumb-placeholder {
+    border-bottom: none;
+  }
+  .paper-graph-btn {
+    position: absolute;
+    top: 34px;
+    right: 6px;
+    z-index: 5;
+    width: 24px;
+    height: 24px;
+    border: 1px solid rgba(123, 184, 204, 0.45);
+    background: rgba(9, 24, 39, 0.88);
+    color: #9ACBDD;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.88;
+    transition: opacity 0.15s, color 0.15s, border-color 0.15s, background 0.15s;
+  }
+  .card:hover .paper-graph-btn,
+  .paper-graph-btn:focus-visible {
+    opacity: 1;
+  }
+  .paper-graph-btn:hover {
+    color: #0D1B2A;
+    border-color: #68D8B5;
+    background: #68D8B5;
+  }
+  .paper-note-btn {
+    position: absolute;
+    top: 62px;
+    right: 6px;
+    z-index: 5;
+    width: 24px;
+    height: 24px;
+    border: 1px solid rgba(123, 184, 204, 0.45);
+    background: rgba(9, 24, 39, 0.88);
+    color: #9ACBDD;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    line-height: 1;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.88;
+    transition: opacity 0.15s, color 0.15s, border-color 0.15s, background 0.15s;
+  }
+  .card:hover .paper-note-btn,
+  .paper-note-btn:focus-visible {
+    opacity: 1;
+  }
+  .paper-note-btn:hover,
+  .paper-note-btn.has-note {
+    color: #0D1B2A;
+    border-color: #F6C344;
+    background: #F6C344;
+  }
+  .cover-rating {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    z-index: 5;
+    display: flex;
+    justify-content: center;
+    gap: 1px;
+    padding: 3px 5px;
+    background: rgba(9, 24, 39, 0.78);
+    border: 1px solid rgba(123, 184, 204, 0.28);
+    border-radius: 5px;
+    backdrop-filter: blur(4px);
+  }
+  .rating-star {
+    position: relative;
+    width: 18px;
+    height: 19px;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+    font: inherit;
+    font-size: 15px;
+    line-height: 19px;
+    color: #4B7A9E;
+  }
+  .rating-star .rating-base,
+  .rating-star .rating-fill {
+    position: absolute;
+    inset: 0;
+    display: block;
+    text-align: center;
+    pointer-events: none;
+  }
+  .rating-star .rating-fill {
+    color: #F6C344;
+    overflow: hidden;
+    width: 0;
+    white-space: nowrap;
+  }
+  .rating-star:hover .rating-base {
+    color: #7BB8CC;
+  }
+  .card-body { padding: 12px 14px 14px; flex: 1; display: flex; flex-direction: column; }
+  .card-title {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #FFFFFF;
+    line-height: 1.35;
+    margin-bottom: 4px;
+  }
+  .card-title .short { color: var(--accent); margin-right: 5px; }
+  .card-title .type-tag {
+    display: inline-block;
+    padding: 0 6px;
+    border-radius: 2px;
+    font-size: 9px;
+    font-weight: 600;
+    margin-right: 4px;
+    background: #1C3454;
+    color: #7BB8CC;
+    vertical-align: middle;
+  }
+  .star { color: #F6C344; font-size: 11px; }
+  /* ── Bulk select ── */
+  .card.bulk-selected { border-color: #3381D4; box-shadow: 0 0 0 2px rgba(51,129,212,0.35); }
+  .card-check {
+    position: absolute; top: 6px; left: 6px; z-index: 4;
+    width: 18px; height: 18px;
+    accent-color: #3381D4;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .card:hover .card-check,
+  .card-check:checked { opacity: 1; }
+  .card-check:checked ~ .card-star-btn { display: none; }
+  #bulk-bar {
+    display: none;
+    position: fixed; bottom: 24px; right: 24px; z-index: 100;
+    background: #0E2030;
+    border: 1px solid #3381D4;
+    border-radius: 8px;
+    padding: 10px 14px;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  }
+  #bulk-bar.show { display: flex; }
+  #bulk-bar select {
+    background: #0D1B2A; border: 1px solid #3381D4; color: #FFFFFF;
+    padding: 4px 8px; border-radius: 4px; font-size: 12px; font-family: inherit;
+  }
+  .bulk-count { color: #7BB8CC; font-size: 12px; }
+  .card-star-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    z-index: 3;
+    background: rgba(13,27,42,0.7);
+    border: none;
+    border-radius: 3px;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 13px;
+    padding: 0;
+    color: #4B7A9E;
+    opacity: 0;
+    transition: opacity 0.15s, color 0.15s;
+  }
+  .card:hover .card-star-btn { opacity: 1; }
+  .card-star-btn.starred { opacity: 1; color: #F6C344; }
+  .card-note {
+    font-size: 10.5px;
+    color: #7BB8CC;
+    margin: 4px 0 10px;
+    line-height: 1.45;
+    flex: 1;
+  }
+  .tag-row {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin: 2px 0 7px;
+  }
+  .tag-pill {
+    background: rgba(123, 184, 204, 0.12);
+    border: 1px solid rgba(123, 184, 204, 0.24);
+    color: #9ACBDD;
+    border-radius: 3px;
+    padding: 2px 6px;
+    font-size: 9.5px;
+    line-height: 1.2;
+  }
+  .card-controls {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+  .card-select {
+    background: #0D1B2A;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 3px 6px;
+    border-radius: 3px;
+    font-size: 10.5px;
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+  }
+  .card-select:hover { filter: brightness(1.2); }
+  .icon-btn {
+    background: transparent;
+    border: 1px solid #1C3454;
+    color: #6A9BBF;
+    width: 22px;
+    height: 22px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 11px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+  }
+  .icon-btn:hover { color: #FFFFFF; border-color: #3381D4; }
+  .icon-btn.danger:hover { color: #F87171; border-color: #F87171; }
+  .card-links {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .link {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 3px 9px;
+    font-size: 10.5px;
+    border-radius: 3px;
+    text-decoration: none;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    border: none;
+  }
+  .link-pdf { background: var(--accent); color: #0D1B2A; }
+  .link-pdf:hover { filter: brightness(1.15); }
+  .link-arxiv {
+    background: transparent;
+    color: #7BB8CC;
+    border: 1px solid #1C3454;
+  }
+  .link-arxiv:hover { border-color: #7BB8CC; color: #FFFFFF; }
+  .arxiv-id {
+    font-family: "SF Mono", monospace;
+    font-size: 9.5px;
+    color: #4B7A9E;
+    margin-left: auto;
+  }
+
+  /* Modal */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+  .modal-backdrop.show { display: flex; }
+  .modal {
+    background: #0E2030;
+    border: 1px solid #1C3454;
+    border-radius: 8px;
+    padding: 24px;
+    width: 90%;
+    max-width: 520px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal h2 {
+    margin: 0 0 16px;
+    font-size: 17px;
+    color: #FFFFFF;
+  }
+  .field { margin-bottom: 12px; }
+  .field label {
+    display: block;
+    font-size: 11.5px;
+    color: #7BB8CC;
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+  .field input, .field textarea, .field select {
+    width: 100%;
+    padding: 7px 10px;
+    background: #0D1B2A;
+    border: 1px solid #1C3454;
+    color: #C2DCF0;
+    border-radius: 4px;
+    font-size: 12.5px;
+    font-family: inherit;
+    outline: none;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus { border-color: #02C39A; }
+  .field textarea { resize: vertical; min-height: 60px; }
+  .field-row { display: flex; gap: 10px; }
+  .field-row .field { flex: 1; }
+  .checkbox-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: #C2DCF0;
+    cursor: pointer;
+  }
+  .checkbox-field input { width: auto; }
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 20px;
+  }
+
+  .add-tab-btn {
+    padding: 6px 14px;
+    background: transparent;
+    border: 1px solid #1C3454;
+    color: #7BB8CC;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12.5px;
+    transition: all 0.15s;
+    font-weight: 500;
+  }
+  .add-tab-btn.active { background: #02C39A; color: #0D1B2A; border-color: #02C39A; font-weight: 600; }
+  .add-tab-btn:hover:not(.active) { border-color: #3381D4; color: #FFFFFF; }
+
+  .graph-shell {
+    display: grid;
+    gap: 12px;
+  }
+  .graph-summary {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    color: #7BB8CC;
+    font-size: 11.5px;
+  }
+  .graph-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 9px;
+    border: 1px solid #1C3454;
+    background: #0E2030;
+    border-radius: 999px;
+    color: #9ACBDD;
+    font-weight: 600;
+  }
+  .graph-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 310px;
+    gap: 12px;
+    align-items: stretch;
+  }
+  .graph-canvas {
+    min-height: 620px;
+    background: #091827;
+    border: 1px solid #1C3454;
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+  }
+  .graph-svg {
+    width: 100%;
+    height: 620px;
+    display: block;
+  }
+  .graph-side {
+    background: #0E2030;
+    border: 1px solid #1C3454;
+    border-radius: 6px;
+    padding: 14px;
+    min-height: 620px;
+    color: #C2DCF0;
+  }
+  .graph-side h3 {
+    margin: 0 0 8px;
+    color: #FFFFFF;
+    font-size: 14px;
+    line-height: 1.3;
+  }
+  .graph-side .muted {
+    color: #6A9BBF;
+    font-size: 11.5px;
+    line-height: 1.55;
+  }
+  .graph-list {
+    display: grid;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .graph-list-item {
+    padding: 7px 8px;
+    background: #0D1B2A;
+    border: 1px solid #1C3454;
+    border-radius: 4px;
+    font-size: 11.5px;
+    line-height: 1.35;
+  }
+  .graph-node { cursor: pointer; }
+  .graph-node circle {
+    stroke: #0D1B2A;
+    stroke-width: 2.5;
+    transition: stroke 0.15s, filter 0.15s, r 0.15s;
+  }
+  .graph-node:hover circle,
+  .graph-node.selected circle {
+    stroke: #FFFFFF;
+    filter: drop-shadow(0 0 8px rgba(2,195,154,0.65));
+  }
+  .graph-node text {
+    font-size: 10.5px;
+    fill: #C2DCF0;
+    paint-order: stroke;
+    stroke: #091827;
+    stroke-width: 3px;
+    stroke-linejoin: round;
+    pointer-events: none;
+  }
+  .graph-node.unresolved circle {
+    fill: #1C3454;
+    stroke-dasharray: 3 3;
+    opacity: 0.85;
+  }
+  .graph-edge {
+    stroke: #4B7A9E;
+    stroke-opacity: 0.58;
+    stroke-width: 1.4;
+    marker-end: url(#graph-arrow);
+  }
+  .graph-edge.highlight {
+    stroke: #02C39A;
+    stroke-width: 2.2;
+    stroke-opacity: 0.9;
+  }
+  .graph-empty {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    color: #7BB8CC;
+    padding: 24px;
+    pointer-events: none;
+  }
+  .graph-empty strong {
+    display: block;
+    color: #FFFFFF;
+    margin-bottom: 6px;
+    font-size: 14px;
+  }
+  @media (max-width: 900px) {
+    .graph-layout { grid-template-columns: 1fr; }
+    .graph-side { min-height: 0; }
+  }
+
+  .paper-graph-modal {
+    width: min(1120px, 94vw);
+    max-width: 1120px;
+    padding: 0;
+    overflow: hidden;
+  }
+  .paper-graph-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 18px;
+    border-bottom: 1px solid #1C3454;
+    background: #0B1728;
+  }
+  .paper-graph-head h2 {
+    margin: 0 0 5px;
+    font-size: 16px;
+    line-height: 1.35;
+  }
+  .paper-graph-head .muted {
+    color: #7BB8CC;
+    font-size: 11.5px;
+    line-height: 1.45;
+  }
+  .paper-graph-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .paper-graph-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 0;
+    min-height: min(680px, 72vh);
+  }
+  .paper-graph-canvas {
+    position: relative;
+    min-height: 620px;
+    background: #091827;
+    border-right: 1px solid #1C3454;
+    overflow: hidden;
+  }
+  .paper-radial-svg {
+    width: 100%;
+    height: min(680px, 72vh);
+    min-height: 620px;
+    display: block;
+  }
+  .paper-graph-panel {
+    padding: 14px;
+    overflow-y: auto;
+    max-height: 72vh;
+  }
+  .paper-graph-panel h3 {
+    margin: 0 0 8px;
+    color: #FFFFFF;
+    font-size: 14px;
+    line-height: 1.35;
+  }
+  .paper-graph-panel .muted {
+    color: #7BB8CC;
+    font-size: 11.5px;
+    line-height: 1.5;
+  }
+  .paper-graph-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    padding: 12px 14px 0;
+  }
+  .paper-ref-list {
+    display: grid;
+    gap: 6px;
+    margin-top: 12px;
+  }
+  .paper-ref-item {
+    width: 100%;
+    text-align: left;
+    padding: 8px 9px;
+    border: 1px solid #1C3454;
+    background: #0D1B2A;
+    color: #C2DCF0;
+    border-radius: 5px;
+    cursor: pointer;
+    font: inherit;
+    font-size: 11.5px;
+    line-height: 1.35;
+  }
+  .paper-ref-item:hover,
+  .paper-ref-item.active {
+    border-color: #68D8B5;
+  }
+  .paper-ref-item .ref-meta {
+    color: #6A9BBF;
+    display: block;
+    margin-top: 3px;
+  }
+  .paper-graph-node { cursor: pointer; }
+  .paper-graph-node circle {
+    stroke: #091827;
+    stroke-width: 2.4;
+    transition: stroke 0.15s, filter 0.15s;
+  }
+  .paper-graph-node:hover circle,
+  .paper-graph-node.selected circle {
+    stroke: #FFFFFF;
+    filter: drop-shadow(0 0 8px rgba(104,216,181,0.65));
+  }
+  .paper-graph-node.center circle {
+    stroke: #FFFFFF;
+    stroke-width: 3;
+  }
+  .paper-graph-node.external circle {
+    fill: #6A9BBF;
+    opacity: 0.82;
+  }
+  .paper-graph-node text {
+    font-size: 10px;
+    fill: #C2DCF0;
+    paint-order: stroke;
+    stroke: #091827;
+    stroke-width: 3px;
+    stroke-linejoin: round;
+    pointer-events: none;
+  }
+  .paper-radial-edge {
+    stroke: #315A7A;
+    stroke-opacity: 0.56;
+    stroke-width: 1.2;
+    marker-end: url(#paper-radial-arrow);
+  }
+  .paper-radial-edge.local {
+    stroke: #68D8B5;
+    stroke-opacity: 0.9;
+    stroke-width: 1.7;
+  }
+  .paper-graph-loading,
+  .paper-graph-error {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    padding: 24px;
+    color: #9ACBDD;
+    background: rgba(9, 24, 39, 0.72);
+    pointer-events: none;
+  }
+  .paper-graph-error strong,
+  .paper-graph-loading strong {
+    display: block;
+    color: #FFFFFF;
+    margin-bottom: 6px;
+    font-size: 14px;
+  }
+  @media (max-width: 900px) {
+    .paper-graph-body { grid-template-columns: 1fr; }
+    .paper-graph-canvas { border-right: none; border-bottom: 1px solid #1C3454; }
+    .paper-graph-panel { max-height: none; }
+  }
+
+  .paper-note-modal {
+    width: min(960px, 94vw);
+    max-width: 960px;
+    padding: 0;
+    overflow: hidden;
+  }
+  .paper-note-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 15px 18px;
+    border-bottom: 1px solid #1C3454;
+    background: #0B1728;
+  }
+  .paper-note-head h2 {
+    margin: 0 0 5px;
+    font-size: 16px;
+    line-height: 1.35;
+  }
+  .paper-note-head .muted {
+    color: #7BB8CC;
+    font-size: 11.5px;
+    line-height: 1.45;
+  }
+  .paper-note-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+    align-items: center;
+  }
+  .paper-note-status {
+    color: #7BB8CC;
+    font-size: 11.5px;
+    white-space: nowrap;
+  }
+  .paper-note-toolbar {
+    display: flex;
+    gap: 6px;
+    padding: 10px 18px;
+    background: #0E2030;
+    border-bottom: 1px solid #1C3454;
+  }
+  .note-tool {
+    border: 1px solid #1C3454;
+    background: #0D1B2A;
+    color: #C2DCF0;
+    min-width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .note-tool:hover {
+    border-color: #68D8B5;
+    color: #FFFFFF;
+  }
+  .paper-note-body {
+    background: #D8E1EC;
+    padding: 20px;
+    max-height: 76vh;
+    overflow-y: auto;
+  }
+  .paper-note-editor {
+    width: min(760px, 100%);
+    min-height: 620px;
+    display: block;
+    margin: 0 auto;
+    border: 1px solid #B7C4D2;
+    border-radius: 3px;
+    background: #FFFFFF;
+    color: #182536;
+    box-shadow: 0 12px 32px rgba(13, 27, 42, 0.22);
+    padding: 34px 40px;
+    resize: vertical;
+    outline: none;
+    font: 14px/1.75 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  .paper-note-editor:focus {
+    border-color: #3381D4;
+    box-shadow: 0 0 0 2px rgba(51, 129, 212, 0.18), 0 12px 32px rgba(13, 27, 42, 0.22);
+  }
+  @media (max-width: 720px) {
+    .paper-note-head { flex-direction: column; }
+    .paper-note-body { padding: 12px; }
+    .paper-note-editor { padding: 24px 20px; min-height: 540px; }
+  }
+
+  footer {
+    text-align: center;
+    padding: 20px;
+    color: #4B7A9E;
+    font-size: 10.5px;
+    border-top: 1px solid #1A3048;
+  }
+
+  .left::-webkit-scrollbar { width: 8px; }
+  .left::-webkit-scrollbar-track { background: #0D1B2A; }
+  .left::-webkit-scrollbar-thumb { background: #1C3454; border-radius: 4px; }
+  .left::-webkit-scrollbar-thumb:hover { background: #3381D4; }
+
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <div class="left">
+    <header>
+      <div class="header-top">
+        <div>
+          <h1 id="lib-title">Paper Library</h1>
+          <div class="sub" id="lib-subtitle">按分类浏览 · 支持编辑分类 + 新增论文</div>
+          <div class="meta">点击缩略图分屏预览 PDF · 修改后自动保存</div>
+        </div>
+        <div class="actions">
+          <span class="save-indicator" id="save-indicator"></span>
+          <button class="btn btn-ghost" onclick="openCategoryModal()">🏷️ 管理分类</button>
+          <button class="btn btn-primary" onclick="openAddModal()">＋ 新增</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="filters">
+      <input type="text" id="search" placeholder="🔍 搜索标题、简称、机构、刊会、备注...">
+      <div class="view-toggle" id="view-toggle">
+        <button data-view="cat" class="active">按主题</button>
+        <button data-view="graph">图模块</button>
+        <button data-view="venueType">按发表类型</button>
+        <button data-view="ccf">按 CCF</button>
+        <button data-view="track">按形式</button>
+        <button data-view="venue">按刊会</button>
+        <button data-view="org">按机构</button>
+        <button data-view="abstract">摘要列表</button>
+        <button data-view="introduction">Introduction</button>
+      </div>
+      <span class="filter-divider"></span>
+      <div id="filter-bar" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"></div>
+    </div>
+
+    <main id="main"></main>
+
+    <footer>
+      数据文件：<code>papers.json</code> · 每次修改自动备份至 <code>.backup/</code>
+    </footer>
+  </div>
+
+  <div id="bulk-bar">
+    <span class="bulk-count" id="bulk-count">已选 0 篇</span>
+    <select id="bulk-cat-select"></select>
+    <button class="btn btn-primary" onclick="applyBulkCategory()">修改分类</button>
+    <button class="btn btn-ghost" onclick="clearBulkSelect()">取消</button>
+  </div>
+
+  <div class="right" id="right">
+    <div class="right-head">
+      <span class="title" id="right-title">PDF 预览</span>
+      <a id="right-open-ext" class="close-btn" style="display:none;margin-right:8px;text-decoration:none" target="_blank">↗ 新标签打开</a>
+      <button class="close-btn" onclick="closePdf()" title="按 ESC 关闭分屏">✕ 关闭 <kbd>ESC</kbd></button>
+    </div>
+    <iframe class="pdf-frame" id="pdf-frame" src="" referrerpolicy="no-referrer"></iframe>
+  </div>
+</div>
+
+<!-- ── Category Management Modal ── -->
+<div class="modal-backdrop" id="cat-modal-backdrop">
+  <div class="modal" style="max-width: 640px;">
+    <h2>🏷️ 分类管理</h2>
+    <div id="category-list" style="margin-bottom: 18px;"></div>
+    <div style="border-top: 1px solid #1C3454; padding-top: 14px;">
+      <h2 style="font-size: 14px; margin-bottom: 10px;" id="cat-form-title">新增分类</h2>
+      <input type="hidden" id="cat-edit-id">
+      <div class="field-row">
+        <div class="field">
+          <label>类名</label>
+          <input type="text" id="cat-title" placeholder="例如 机器人操作">
+        </div>
+        <div class="field" style="flex: 0 0 110px;">
+          <label>颜色</label>
+          <input type="color" id="cat-color" value="#0AB5A8" style="padding: 3px; height: 34px;">
+        </div>
+      </div>
+      <div class="field">
+        <label>描述</label>
+        <input type="text" id="cat-tag" placeholder="例如 抓取、放置、全身协同">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="resetCatForm()">重置</button>
+        <button class="btn btn-primary" onclick="saveCategory()" id="cat-save-btn">添加</button>
+      </div>
+    </div>
+    <div class="modal-actions" style="border-top: 1px solid #1C3454; padding-top: 14px;">
+      <button class="btn btn-ghost" onclick="closeCategoryModal()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Add / Edit Paper Modal ── -->
+<div class="modal-backdrop" id="modal-backdrop">
+  <div class="modal" style="max-width:680px">
+    <h2 id="modal-title">新增论文 / 产品</h2>
+    <div class="field">
+      <label>类型</label>
+      <span id="f-type-display" style="font-size:14px;color:var(--text)"></span>
+      <input type="hidden" id="f-type">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>分类</label>
+        <select id="f-cat"></select>
+      </div>
+      <div class="field">
+        <label>简称</label>
+        <input type="text" id="f-short" placeholder="例如 UMI 或 Figure02">
+      </div>
+    </div>
+    <div class="field">
+      <label>完整标题</label>
+      <input type="text" id="f-title" placeholder="论文标题 或 产品全称">
+    </div>
+    <div class="field">
+      <label>备注 / 描述</label>
+      <textarea id="f-note" placeholder="机构 · 核心创新 · 关键指标"></textarea>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>发表刊会 / 期刊</label>
+        <input type="text" id="f-venue" placeholder="例如 AAAI / EMNLP Findings / JAMIA">
+      </div>
+      <div class="field" style="flex: 0 0 130px;">
+        <label>发表类型</label>
+        <select id="f-venueType">
+          <option value="">—</option>
+          <option value="conference">会议</option>
+          <option value="journal">期刊</option>
+          <option value="preprint">预印本</option>
+          <option value="workshop">Workshop</option>
+          <option value="submission">投稿/审稿中</option>
+          <option value="other">其他</option>
+        </select>
+      </div>
+      <div class="field" style="flex: 0 0 105px;">
+        <label>CCF</label>
+        <select id="f-ccf">
+          <option value="">待补充</option>
+          <option value="A">A</option>
+          <option value="B">B</option>
+          <option value="C">C</option>
+          <option value="N/A">未收录/不适用</option>
+        </select>
+      </div>
+      <div class="field" style="flex: 0 0 125px;">
+        <label>收录形式</label>
+        <select id="f-venueTrack">
+          <option value="">自动/待补充</option>
+          <option value="main">主会/主刊</option>
+          <option value="findings">Findings</option>
+          <option value="workshop">Workshop</option>
+          <option value="demo">Demo</option>
+          <option value="submission">投稿/审稿中</option>
+          <option value="preprint">arXiv/预印本</option>
+          <option value="other">其他</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>所属机构</label>
+        <input type="text" id="f-org" placeholder="例如 Stanford University / NVIDIA">
+      </div>
+      <div class="field" style="flex: 0 0 150px;">
+        <label>机构类型</label>
+        <select id="f-orgType">
+          <option value="">—</option>
+          <option value="school">🎓 学校</option>
+          <option value="company">🏢 公司</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-row" id="row-arxiv">
+      <div class="field">
+        <label>arXiv ID</label>
+        <input type="text" id="f-arxiv" placeholder="例如 2402.10329">
+      </div>
+      <div class="field">
+        <label>PDF 文件名</label>
+        <input type="text" id="f-pdf" placeholder="放入 references/ 目录后填写">
+      </div>
+    </div>
+    <div class="field" id="row-url" style="display:none">
+      <label>产品/公司链接</label>
+      <input type="text" id="f-url" placeholder="https://...">
+    </div>
+    <div class="field">
+      <label>缩略图文件名</label>
+      <input type="text" id="f-thumb" placeholder="例如 UMI_2402.10329-01.png">
+    </div>
+    <label class="checkbox-field">
+      <input type="checkbox" id="f-star"> ★ 标记为收藏
+    </label>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">取消</button>
+      <button class="btn btn-ghost" id="delete-btn" style="display:none; color:#F87171; border-color:#1C3454;" onclick="deletePaper()">删除</button>
+      <button class="btn btn-primary" onclick="savePaper()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Add Paper Modal (本地 PDF / arXiv / 网页) ── -->
+<div class="modal-backdrop" id="add-modal-backdrop">
+  <div class="modal" style="max-width:680px">
+    <h2>＋ 新增论文</h2>
+    <div style="display:flex;gap:6px;margin-bottom:16px">
+      <button class="add-tab-btn active" data-tab="local" onclick="switchAddTab('local')">📁 本地 PDF</button>
+      <button class="add-tab-btn" data-tab="arxiv" onclick="switchAddTab('arxiv')">📖 arXiv</button>
+      <button class="add-tab-btn" data-tab="web" onclick="switchAddTab('web')">🏢 公司产品</button>
+    </div>
+
+    <!-- 本地 PDF tab -->
+    <div id="add-tab-local">
+      <div id="add-upload-zone" style="border:2px dashed #1C3454;border-radius:6px;padding:28px;text-align:center;cursor:pointer;transition:border-color 0.15s" onclick="document.getElementById('add-file').click()">
+        <input type="file" id="add-file" accept=".pdf" style="display:none" onclick="event.stopPropagation()">
+        <div id="add-upload-idle">
+          <div style="font-size:32px;margin-bottom:8px">📄</div>
+          <div style="color:#C2DCF0;font-size:13px;font-weight:600">点击选择 PDF，或拖拽到此处</div>
+        </div>
+        <div id="add-upload-busy" style="display:none;color:#F6C344;font-size:13px">⟳ 上传并生成缩略图、提取标题中...</div>
+        <div id="add-upload-done" style="display:none">
+          <img id="add-thumb-preview" src="" style="max-height:110px;border-radius:4px;margin-bottom:8px;display:none">
+          <div id="add-done-name" style="color:#02C39A;font-size:12px;font-weight:600"></div>
+          <div style="color:#7BB8CC;font-size:11px;margin-top:4px">点击重新选择</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- arXiv tab -->
+    <div id="add-tab-arxiv" style="display:none">
+      <div class="field">
+        <label>arXiv ID 或链接</label>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="a-arxiv-input" placeholder="例如 2402.10329 或 arxiv.org/abs/2402.10329" style="flex:1" onkeydown="if(event.key==='Enter')fetchArxiv()">
+          <button class="btn btn-ghost" id="a-fetch-btn" onclick="fetchArxiv()" style="white-space:nowrap">获取</button>
+        </div>
+      </div>
+      <div id="a-arxiv-status" style="display:none;font-size:11.5px;margin-bottom:10px;padding:6px 10px;border-radius:4px"></div>
+      <div id="a-arxiv-preview" style="display:none;background:#0D1B2A;border:1px solid #1C3454;border-radius:4px;padding:10px 12px;margin-bottom:2px">
+        <div id="a-preview-thumb-wrap" style="float:right;margin-left:10px;display:none">
+          <img id="a-preview-thumb" src="" style="max-height:80px;border-radius:3px">
+        </div>
+        <div id="a-preview-title" style="color:#FFFFFF;font-weight:600;font-size:12.5px;margin-bottom:4px;line-height:1.4"></div>
+        <div id="a-preview-authors" style="color:#7BB8CC;font-size:11px"></div>
+        <div style="clear:both"></div>
+      </div>
+    </div>
+
+    <!-- 公司产品 tab -->
+    <div id="add-tab-web" style="display:none">
+      <div class="field">
+        <label>产品/公司链接</label>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="a-url-input" placeholder="https://..." style="flex:1" onkeydown="if(event.key==='Enter')fetchOgImage()">
+          <button class="btn btn-ghost" id="a-og-btn" onclick="fetchOgImage()" style="white-space:nowrap">获取</button>
+        </div>
+      </div>
+      <div id="a-og-status" style="display:none;font-size:11.5px;margin-bottom:8px;padding:6px 10px;border-radius:4px"></div>
+      <div id="a-og-preview" style="display:none;background:#0D1B2A;border:1px solid #1C3454;border-radius:4px;padding:8px 12px">
+        <img id="a-og-thumb" src="" style="max-height:80px;border-radius:3px">
+      </div>
+    </div>
+
+    <!-- 选填信息（所有 tab 始终显示）-->
+    <div id="add-shared-fields" style="border-top:1px solid #1C3454;padding-top:14px;margin-top:14px">
+      <div style="font-size:11px;color:#4B7A9E;font-weight:600;margin-bottom:12px;letter-spacing:0.5px">选填信息</div>
+      <div class="field">
+        <label>标题</label>
+        <input type="text" id="a-title" placeholder="不填则自动使用">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>发表刊会 / 期刊</label>
+          <input type="text" id="a-venue" placeholder="例如 AAAI / EMNLP Findings / JAMIA">
+        </div>
+        <div class="field" style="flex:0 0 130px">
+          <label>发表类型</label>
+          <select id="a-venueType">
+            <option value="">—</option>
+            <option value="conference">会议</option>
+            <option value="journal">期刊</option>
+            <option value="preprint">预印本</option>
+            <option value="workshop">Workshop</option>
+            <option value="submission">投稿/审稿中</option>
+            <option value="other">其他</option>
+          </select>
+        </div>
+        <div class="field" style="flex:0 0 105px">
+          <label>CCF</label>
+          <select id="a-ccf">
+            <option value="">待补充</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="N/A">未收录/不适用</option>
+          </select>
+        </div>
+        <div class="field" style="flex:0 0 125px">
+          <label>收录形式</label>
+          <select id="a-venueTrack">
+            <option value="">自动/待补充</option>
+            <option value="main">主会/主刊</option>
+            <option value="findings">Findings</option>
+            <option value="workshop">Workshop</option>
+            <option value="demo">Demo</option>
+            <option value="submission">投稿/审稿中</option>
+            <option value="preprint">arXiv/预印本</option>
+            <option value="other">其他</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>简称</label>
+          <input type="text" id="a-short" placeholder="自动取首词">
+        </div>
+        <div class="field">
+          <label>分类</label>
+          <select id="a-cat"></select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>机构</label>
+          <input type="text" id="a-org" placeholder="例如 Stanford University">
+        </div>
+        <div class="field" style="flex:0 0 130px">
+          <label>机构类型</label>
+          <select id="a-orgType">
+            <option value="">—</option>
+            <option value="school">🎓 学校</option>
+            <option value="company">🏢 公司</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row" id="a-arxiv-pdf-row">
+        <div class="field">
+          <label>arXiv ID</label>
+          <input type="text" id="a-arxiv-id" placeholder="例如 2402.10329">
+        </div>
+        <div class="field">
+          <label>PDF 文件名</label>
+          <input type="text" id="a-pdf" placeholder="放入 references/ 目录后填写">
+        </div>
+      </div>
+      <div class="field">
+        <label>缩略图文件名</label>
+        <input type="text" id="a-thumb" placeholder="放入 references/thumbs/ 目录">
+      </div>
+      <div class="field">
+        <label>备注</label>
+        <textarea id="a-note" style="min-height:48px" placeholder="简短描述"></textarea>
+      </div>
+      <label class="checkbox-field" style="margin-top:4px">
+        <input type="checkbox" id="a-star"> ★ 标记为收藏
+      </label>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeAddModal()">取消</button>
+      <button class="btn btn-primary" id="add-submit-btn" onclick="submitAdd()">导入</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Single Paper Reference Graph Modal ── -->
+<div class="modal-backdrop" id="paper-graph-backdrop">
+  <div class="modal paper-graph-modal">
+    <div class="paper-graph-head">
+      <div>
+        <h2 id="paper-graph-title">论文知识图谱</h2>
+        <div class="muted" id="paper-graph-subtitle">以当前论文为中心，展开它引用的参考文献。</div>
+      </div>
+      <div class="paper-graph-actions">
+        <button class="btn btn-ghost" id="paper-graph-refresh" onclick="refreshPaperGraph()">更新图谱</button>
+        <button class="btn btn-ghost" onclick="closePaperGraph()">关闭</button>
+      </div>
+    </div>
+    <div id="paper-graph-content"></div>
+  </div>
+</div>
+
+<!-- ── Paper Note Modal ── -->
+<div class="modal-backdrop" id="paper-note-backdrop">
+  <div class="modal paper-note-modal">
+    <div class="paper-note-head">
+      <div>
+        <h2 id="paper-note-title">论文笔记</h2>
+        <div class="muted" id="paper-note-subtitle">Markdown / 纯文本</div>
+      </div>
+      <div class="paper-note-actions">
+        <span class="paper-note-status" id="paper-note-status"></span>
+        <button class="btn btn-ghost" onclick="closePaperNote()">关闭</button>
+      </div>
+    </div>
+    <div class="paper-note-toolbar">
+      <button class="note-tool" onclick="wrapNoteSelection('**','**')">B</button>
+      <button class="note-tool" onclick="wrapNoteSelection('*','*')">I</button>
+      <button class="note-tool" onclick="prefixNoteLine('# ')">H</button>
+      <button class="note-tool" onclick="prefixNoteLine('- ')">•</button>
+      <button class="note-tool" onclick="prefixNoteLine('- [ ] ')">☐</button>
+    </div>
+    <div class="paper-note-body">
+      <textarea id="paper-note-editor" class="paper-note-editor" spellcheck="true" placeholder=""></textarea>
+    </div>
+  </div>
+</div>
+
+<script>
+let state = { meta: {}, categories: [], papers: [] };
+let lastMtime = null;
+let editingId = null;
+let activePaperId = null;
+let viewMode = "cat";
+let activeFilter = "all";
+let citationGraph = null;
+let citationGraphLoading = false;
+let citationGraphError = "";
+let selectedGraphNodeId = null;
+let paperGraphCache = new Map();
+let paperGraphLoadingId = null;
+let paperGraphError = "";
+let currentPaperGraphId = null;
+let selectedPaperGraphNodeId = null;
+let editingNotePaperId = null;
+let noteSaveTimer = null;
+
+const main = document.getElementById("main");
+const app = document.getElementById("app");
+const pdfFrame = document.getElementById("pdf-frame");
+const rightTitle = document.getElementById("right-title");
+const indicator = document.getElementById("save-indicator");
+
+const VENUE_TYPE_META = {
+  conference: { label: "会议", color: "#22D3EE", cls: "conference", order: 0 },
+  journal: { label: "期刊", color: "#34D399", cls: "journal", order: 1 },
+  preprint: { label: "预印本", color: "#F59E0B", cls: "preprint", order: 2 },
+  workshop: { label: "Workshop", color: "#A78BFA", cls: "workshop", order: 3 },
+  submission: { label: "投稿/审稿中", color: "#D8B4FE", cls: "submission", order: 4 },
+  other: { label: "其他", color: "#94A3B8", cls: "other", order: 5 },
+  "": { label: "未填写发表类型", color: "#64748B", cls: "other", order: 9 },
+};
+const CCF_META = {
+  A: { label: "CCF A", color: "#5EEAD4", cls: "rank-a", order: 0 },
+  B: { label: "CCF B", color: "#93C5FD", cls: "rank-b", order: 1 },
+  C: { label: "CCF C", color: "#FCD34D", cls: "rank-c", order: 2 },
+  "N/A": { label: "未收录/不适用", color: "#D1D5DB", cls: "rank-na", order: 3 },
+  "": { label: "待补充 CCF", color: "#64748B", cls: "rank-na", order: 4 },
+};
+const VENUE_TRACK_META = {
+  main: { label: "主会/主刊", color: "#5EEAD4", cls: "main", order: 0 },
+  journal: { label: "期刊正刊", color: "#86EFAC", cls: "journal", order: 1 },
+  findings: { label: "Findings", color: "#C4B5FD", cls: "findings", order: 2 },
+  workshop: { label: "Workshop", color: "#D8B4FE", cls: "workshop", order: 3 },
+  demo: { label: "Demo", color: "#93C5FD", cls: "demo", order: 4 },
+  submission: { label: "投稿/审稿中", color: "#FDA4AF", cls: "submission", order: 5 },
+  preprint: { label: "arXiv/预印本", color: "#FCD34D", cls: "preprint", order: 6 },
+  other: { label: "其他形式", color: "#B8C7D9", cls: "other", order: 7 },
+  "": { label: "待补充形式", color: "#64748B", cls: "other", order: 8 },
+};
+const CCF_BY_VENUE = {
+  AAAI: "A",
+  ACL: "A",
+  ICML: "A",
+  ICLR: "A",
+  IJCAI: "A",
+  KDD: "A",
+  SIGKDD: "A",
+  WWW: "A",
+  EMNLP: "B",
+  COLING: "B",
+  JAMIA: "B",
+  MICCAI: "B",
+  "JBI": "C",
+  "ARTIFICIAL INTELLIGENCE IN MEDICINE": "C",
+};
+
+function normalizeVenueType(value) {
+  return VENUE_TYPE_META[value] ? value : "";
+}
+
+function getVenueTypeMeta(value) {
+  return VENUE_TYPE_META[normalizeVenueType(value)] || VENUE_TYPE_META[""];
+}
+
+function normalizeVenueTrack(value) {
+  return VENUE_TRACK_META[value] ? value : "";
+}
+
+function getVenueTrackMeta(value) {
+  return VENUE_TRACK_META[normalizeVenueTrack(value)] || VENUE_TRACK_META[""];
+}
+
+function getVenueName(p) {
+  return (p.venue || "").trim();
+}
+
+function getCcfRank(p) {
+  const rank = (p.ccf || "").trim().toUpperCase();
+  return CCF_META[rank] ? rank : "";
+}
+
+function getCcfMeta(rank) {
+  return CCF_META[CCF_META[rank] ? rank : ""];
+}
+
+function inferCcfFromVenue(venue) {
+  const text = String(venue || "").toUpperCase();
+  if (!text) return "";
+  if (/\b(BIORXIV|MEDRXIV|RESEARCHGATE)\b/.test(text)) return "N/A";
+  for (const [key, rank] of Object.entries(CCF_BY_VENUE)) {
+    if (text.includes(key)) return rank;
+  }
+  return "";
+}
+
+function inferVenueTrack(venue, venueType) {
+  const text = String(venue || "").toUpperCase();
+  if (/\bFINDINGS\b/.test(text)) return "findings";
+  if (/\b(WORKSHOP|BRIDGE|NEUSYMBRIDGE|GENBIO)\b/.test(text)) return "workshop";
+  if (/\bDEMO\b/.test(text)) return "demo";
+  if (/\b(ARR|SUBMISSION|OPENREVIEW)\b/.test(text)) return "submission";
+  if (/\b(ARXIV|BIORXIV|MEDRXIV|RESEARCHGATE)\b/.test(text)) return "preprint";
+  if (venueType === "journal") return "journal";
+  if (venueType === "preprint") return "preprint";
+  if (venueType === "submission") return "submission";
+  if (venueType === "workshop") return "workshop";
+  if (venueType === "conference") return "main";
+  return "";
+}
+
+function getVenueTrack(p) {
+  const explicit = normalizeVenueTrack(p.venueTrack);
+  return explicit || inferVenueTrack(getVenueName(p), normalizeVenueType(p.venueType));
+}
+
+function maybeFillCcfFromVenue(prefix) {
+  const venue = document.getElementById(`${prefix}-venue`)?.value || "";
+  const venueType = document.getElementById(`${prefix}-venueType`)?.value || "";
+  const ccfEl = document.getElementById(`${prefix}-ccf`);
+  const trackEl = document.getElementById(`${prefix}-venueTrack`);
+  if (ccfEl && !ccfEl.value) {
+    const inferred = inferCcfFromVenue(venue);
+    if (inferred) ccfEl.value = inferred;
+  }
+  if (trackEl && !trackEl.value) {
+    const inferredTrack = inferVenueTrack(venue, venueType);
+    if (inferredTrack) trackEl.value = inferredTrack;
+  }
+}
+
+function countBy(items, keyFn) {
+  const counts = new Map();
+  items.forEach(item => {
+    const key = keyFn(item);
+    counts.set(key, (counts.get(key) || 0) + 1);
+  });
+  return counts;
+}
+
+// ── API ──
+async function loadData() {
+  const res = await fetch("/api/papers");
+  lastMtime = res.headers.get("X-Mtime");
+  state = await res.json();
+  if (!state.meta) state.meta = {};
+  if (state.meta.title) document.getElementById("lib-title").textContent = state.meta.title;
+  if (state.meta.subtitle) document.getElementById("lib-subtitle").textContent = state.meta.subtitle;
+  renderFilterBar();
+  populateCatSelect();
+  render();
+}
+
+async function saveData() {
+  indicator.textContent = "保存中...";
+  indicator.className = "save-indicator saving";
+  try {
+    const headers = { "Content-Type": "application/json" };
+    if (lastMtime) headers["X-If-Mtime"] = lastMtime;
+    const res = await fetch("/api/papers", {
+      method: "PUT",
+      headers,
+      body: JSON.stringify(state),
+    });
+    if (res.status === 409) {
+      indicator.textContent = "⚠ 已过期";
+      indicator.className = "save-indicator error";
+      if (confirm("文件在别处被修改过，你当前的改动将覆盖掉它们。\n点『确定』刷新重新加载最新数据（你本次未保存的改动会丢失）；\n点『取消』保留当前改动。")) {
+        await loadData();
+      }
+      return;
+    }
+    if (!res.ok) throw new Error(await res.text());
+    const mt = res.headers.get("X-Mtime");
+    if (mt) lastMtime = mt;
+    indicator.textContent = "✓ 已保存";
+    indicator.className = "save-indicator saved";
+    setTimeout(() => { indicator.textContent = ""; indicator.className = "save-indicator"; }, 1500);
+  } catch (e) {
+    indicator.textContent = "✗ 失败";
+    indicator.className = "save-indicator error";
+    alert("保存失败: " + e.message);
+  }
+}
+
+// ── Render ──
+function escapeHtml(s) {
+  return String(s ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function renderFilterBar() {
+  const bar = document.getElementById("filter-bar");
+  bar.innerHTML = "";
+  const addFilterBtn = (filter, label) => {
+    const btn = document.createElement("button");
+    btn.className = "filter-btn" + (activeFilter === filter ? " active" : "");
+    btn.dataset.filter = filter;
+    btn.textContent = label;
+    bar.appendChild(btn);
+  };
+
+  addFilterBtn("all", `全部 (${state.papers.length})`);
+
+  const starCount = state.papers.filter(p => p.star).length;
+  addFilterBtn("starred", `★ 收藏 (${starCount})`);
+
+  if (viewMode === "graph") {
+    addFilterBtn("graph:connected", "有本地引用关系");
+    addFilterBtn("graph:unresolved", "未匹配 OpenAlex");
+    const refreshBtn = document.createElement("button");
+    refreshBtn.className = "filter-btn";
+    refreshBtn.textContent = citationGraphLoading ? "正在更新..." : "更新引用图";
+    refreshBtn.disabled = citationGraphLoading;
+    refreshBtn.onclick = () => loadCitationGraph(true);
+    bar.appendChild(refreshBtn);
+  } else if (viewMode === "cat") {
+    state.categories.forEach(c => {
+      const count = state.papers.filter(p => p.cat === c.id).length;
+      addFilterBtn(c.id, `${c.title} (${count})`);
+    });
+  } else if (viewMode === "abstract") {
+    state.categories.forEach(c => {
+      const count = state.papers.filter(p => p.cat === c.id).length;
+      addFilterBtn(c.id, `${c.title} (${count})`);
+    });
+  } else if (viewMode === "introduction") {
+    state.categories.forEach(c => {
+      const count = state.papers.filter(p => p.cat === c.id).length;
+      addFilterBtn(c.id, `${c.title} (${count})`);
+    });
+  } else if (viewMode === "org") {
+    const companyCount = state.papers.filter(p => p.orgType === "company").length;
+    const schoolCount = state.papers.filter(p => p.orgType === "school").length;
+    const labCount = state.papers.filter(p => p.orgType === "lab").length;
+    [
+      { k: "type:company", label: `🏢 公司 (${companyCount})` },
+      { k: "type:school",  label: `🎓 学校 (${schoolCount})` },
+    ].concat(labCount ? [{ k: "type:lab", label: `🔬 实验室 (${labCount})` }] : []).forEach(o => {
+      addFilterBtn(o.k, o.label);
+    });
+  } else if (viewMode === "venueType") {
+    const counts = countBy(state.papers, p => normalizeVenueType(p.venueType));
+    Object.entries(VENUE_TYPE_META)
+      .sort((a, b) => a[1].order - b[1].order)
+      .forEach(([key, meta]) => {
+        const count = counts.get(key) || 0;
+        if (count > 0) addFilterBtn(`venueType:${key || "__blank__"}`, `${meta.label} (${count})`);
+      });
+  } else if (viewMode === "ccf") {
+    const counts = countBy(state.papers, p => getCcfRank(p));
+    Object.entries(CCF_META)
+      .sort((a, b) => a[1].order - b[1].order)
+      .forEach(([key, meta]) => {
+        const count = counts.get(key) || 0;
+        if (count > 0) addFilterBtn(`ccf:${key || "__blank__"}`, `${meta.label} (${count})`);
+      });
+  } else if (viewMode === "track") {
+    const counts = countBy(state.papers, p => getVenueTrack(p));
+    Object.entries(VENUE_TRACK_META)
+      .sort((a, b) => a[1].order - b[1].order)
+      .forEach(([key, meta]) => {
+        const count = counts.get(key) || 0;
+        if (count > 0) addFilterBtn(`track:${key || "__blank__"}`, `${meta.label} (${count})`);
+      });
+  } else if (viewMode === "venue") {
+    const counts = countBy(state.papers, p => getVenueName(p) || "（未填写刊会）");
+    [...counts.entries()]
+      .sort((a, b) => {
+        if (a[0] === "（未填写刊会）") return 1;
+        if (b[0] === "（未填写刊会）") return -1;
+        if (b[1] !== a[1]) return b[1] - a[1];
+        return a[0].localeCompare(b[0]);
+      })
+      .forEach(([venue, count]) => {
+        addFilterBtn(`venue:${encodeURIComponent(venue)}`, `${venue} (${count})`);
+      });
+  }
+
+  bar.querySelectorAll(".filter-btn").forEach(btn => {
+    btn.onclick = () => {
+      activeFilter = btn.dataset.filter;
+      bar.querySelectorAll(".filter-btn").forEach(b => b.classList.toggle("active", b.dataset.filter === activeFilter));
+      render();
+    };
+  });
+}
+
+function setViewMode(mode) {
+  viewMode = mode;
+  activeFilter = "all";
+  document.querySelectorAll("#view-toggle button").forEach(b => b.classList.toggle("active", b.dataset.view === mode));
+  renderFilterBar();
+  render();
+}
+
+function populateCatSelect() {
+  const sel = document.getElementById("f-cat");
+  sel.innerHTML = state.categories.map(c => `<option value="${c.id}">${c.title}</option>`).join("");
+}
+
+function openPdf(pdfName, title, paperId) {
+  if (!pdfName) return;
+  pdfFrame.removeAttribute("srcdoc");
+  pdfFrame.src = "references/" + pdfName;
+  rightTitle.textContent = title;
+  const extBtn = document.getElementById("right-open-ext");
+  extBtn.href = "references/" + pdfName;
+  extBtn.style.display = "inline-block";
+  app.classList.add("split");
+  activePaperId = paperId || null;
+  updateActiveCard();
+}
+
+function openUrl(url, title, paperId) {
+  if (!url) return;
+  const safeUrl = escapeHtml(url);
+  pdfFrame.removeAttribute("srcdoc");
+  pdfFrame.src = url;
+  rightTitle.textContent = title || '外部页面';
+  const extBtn = document.getElementById("right-open-ext");
+  extBtn.href = url;
+  extBtn.style.display = "inline-block";
+  extBtn.textContent = '↗ 新标签打开';
+  app.classList.add("split");
+  activePaperId = paperId || null;
+  updateActiveCard();
+}
+
+function openCiteUrl(url, title) {
+  if (!url) return;
+  pdfFrame.removeAttribute("srcdoc");
+  pdfFrame.src = url;
+  rightTitle.textContent = title || '引用论文';
+  const extBtn = document.getElementById("right-open-ext");
+  extBtn.href = url;
+  extBtn.style.display = "inline-block";
+  extBtn.textContent = '↗ 新标签打开';
+  app.classList.add("split");
+}
+
+function closePdf() {
+  app.classList.remove("split");
+  setTimeout(() => { pdfFrame.removeAttribute("srcdoc"); pdfFrame.src = ""; }, 250);
+  document.getElementById("right-open-ext").style.display = "none";
+  activePaperId = null;
+  updateActiveCard();
+}
+
+function updateActiveCard() {
+  document.querySelectorAll(".card").forEach(c => c.classList.remove("active"));
+  if (activePaperId) {
+    const el = document.querySelector(`.card[data-id="${CSS.escape(activePaperId)}"]`);
+    if (el) el.classList.add("active");
+  }
+}
+
+function changeCategory(id, newCat, sel) {
+  if (newCat === '__new__') {
+    if (sel) { const p = state.papers.find(x=>x.id===id); if (p) sel.value = p.cat; }
+    openCategoryModal();
+    return;
+  }
+  const p = state.papers.find(x => x.id === id);
+  if (!p) return;
+  p.cat = newCat;
+  saveData();
+  renderFilterBar();
+  render();
+}
+
+function toggleStar(id) {
+  const p = state.papers.find(x => x.id === id);
+  if (!p) return;
+  p.star = !p.star;
+  saveData();
+  render();
+}
+
+function normalizeRating(value) {
+  const n = Number(value) || 0;
+  return Math.max(0, Math.min(5, Math.round(n * 2) / 2));
+}
+
+function setRatingFromClick(event, id, starIndex) {
+  const p = state.papers.find(x => x.id === id);
+  if (!p) return;
+  const rect = event.currentTarget.getBoundingClientRect();
+  const next = starIndex - (event.clientX - rect.left < rect.width / 2 ? 0.5 : 0);
+  const current = normalizeRating(p.rating);
+  p.rating = current === next ? null : next;
+  saveData();
+  render();
+}
+
+function renderRatingControl(p) {
+  const rating = normalizeRating(p.rating);
+  const label = rating ? `${rating} / 5` : "未评分";
+  return `<div class="cover-rating" title="${escapeHtml(label)}">
+    ${[1, 2, 3, 4, 5].map(i => {
+      const fill = Math.max(0, Math.min(1, rating - (i - 1))) * 100;
+      return `<button class="rating-star" title="${i - 0.5} / ${i} 星" onclick='setRatingFromClick(event, ${JSON.stringify(p.id)}, ${i})'>
+        <span class="rating-base">★</span>
+        <span class="rating-fill" style="width:${fill}%">★</span>
+      </button>`;
+    }).join("")}
+  </div>`;
+}
+
+function matchQuery(p, q) {
+  if (!q) return true;
+  const tags = Array.isArray(p.tags) ? p.tags.join(" ").toLowerCase() : "";
+  const venue = getVenueName(p).toLowerCase();
+  const venueType = getVenueTypeMeta(p.venueType).label.toLowerCase();
+  const venueTrack = getVenueTrackMeta(getVenueTrack(p)).label.toLowerCase();
+  const ccf = getCcfMeta(getCcfRank(p)).label.toLowerCase();
+  return (p.title?.toLowerCase().includes(q) || p.short?.toLowerCase().includes(q) ||
+          p.note?.toLowerCase().includes(q) || p.org?.toLowerCase().includes(q) ||
+          p.readingNote?.toLowerCase().includes(q) ||
+          venue.includes(q) || venueType.includes(q) || venueTrack.includes(q) ||
+          ccf.includes(q) || tags.includes(q));
+}
+
+function getGraphNode(id) {
+  return citationGraph?.nodes?.find(n => n.id === id) || null;
+}
+
+function graphNodeHasLocalEdge(id) {
+  return !!citationGraph?.edges?.some(e => e.source === id || e.target === id);
+}
+
+function matchesActiveFilter(p) {
+  if (activeFilter === "all") return true;
+  if (activeFilter === "starred") return !!p.star;
+  if (activeFilter === "graph:connected") return graphNodeHasLocalEdge(p.id);
+  if (activeFilter === "graph:unresolved") return getGraphNode(p.id)?.resolved === false;
+  if (activeFilter.startsWith("type:")) return p.orgType === activeFilter.slice(5);
+  if (activeFilter.startsWith("venueType:")) {
+    const key = activeFilter.slice("venueType:".length);
+    return normalizeVenueType(p.venueType) === (key === "__blank__" ? "" : key);
+  }
+  if (activeFilter.startsWith("ccf:")) {
+    const key = activeFilter.slice("ccf:".length);
+    return getCcfRank(p) === (key === "__blank__" ? "" : key);
+  }
+  if (activeFilter.startsWith("track:")) {
+    const key = activeFilter.slice("track:".length);
+    return getVenueTrack(p) === (key === "__blank__" ? "" : key);
+  }
+  if (activeFilter.startsWith("venue:")) {
+    const key = decodeURIComponent(activeFilter.slice("venue:".length));
+    return (getVenueName(p) || "（未填写刊会）") === key;
+  }
+  if (viewMode === "cat") return p.cat === activeFilter;
+  return true;
+}
+
+function renderGroupedSections(pool, groupFn, sortFn, headFn) {
+  const groups = new Map();
+  pool.forEach(p => {
+    const group = groupFn(p);
+    if (!groups.has(group.key)) groups.set(group.key, { ...group, papers: [] });
+    groups.get(group.key).papers.push(p);
+  });
+  const sorted = [...groups.values()].sort(sortFn);
+  sorted.forEach(g => {
+    const section = document.createElement("section");
+    section.className = "section";
+    const head = headFn(g);
+    section.innerHTML = `
+      <div class="section-head">
+        <span class="section-dot" style="background:${head.color}"></span>
+        <span class="section-title">${head.title}</span>
+        ${head.tag ? `<span class="section-tag">${head.tag}</span>` : ""}
+        <span class="section-count">${g.papers.length} 篇</span>
+      </div>
+      <div class="grid">${g.papers.map(renderCard).join("")}</div>`;
+    main.appendChild(section);
+  });
+}
+
+async function loadCitationGraph(refresh=false) {
+  if (citationGraphLoading) return;
+  citationGraphLoading = true;
+  citationGraphError = "";
+  renderFilterBar();
+  render();
+  try {
+    const res = await fetch("/api/citation-graph" + (refresh ? "?refresh=1" : ""));
+    const data = await res.json();
+    if (!res.ok || data.ok === false) {
+      throw new Error(data.error || data.warning || "引用图加载失败");
+    }
+    citationGraph = data;
+    selectedGraphNodeId = selectedGraphNodeId || data.edges?.[0]?.source || data.nodes?.[0]?.id || null;
+  } catch (e) {
+    citationGraphError = e.message;
+  } finally {
+    citationGraphLoading = false;
+    renderFilterBar();
+    render();
+  }
+}
+
+function graphShortLabel(value) {
+  const s = String(value || "");
+  return s.length > 16 ? s.slice(0, 15) + "…" : s;
+}
+
+function renderGraphSvg(nodes, edges) {
+  const width = 1100, height = 620;
+  const nodeById = new Map(nodes.map((n, i) => {
+    const angle = (Math.PI * 2 * i) / Math.max(nodes.length, 1);
+    const radius = 210 + (i % 5) * 18;
+    return [n.id, {
+      ...n,
+      x: width / 2 + Math.cos(angle) * radius,
+      y: height / 2 + Math.sin(angle) * radius,
+      vx: 0,
+      vy: 0,
+    }];
+  }));
+  const layoutEdges = edges
+    .map(e => ({ ...e, s: nodeById.get(e.source), t: nodeById.get(e.target) }))
+    .filter(e => e.s && e.t);
+
+  for (let iter = 0; iter < 90; iter++) {
+    const list = [...nodeById.values()];
+    for (let i = 0; i < list.length; i++) {
+      for (let j = i + 1; j < list.length; j++) {
+        const a = list[i], b = list[j];
+        let dx = b.x - a.x, dy = b.y - a.y;
+        let d2 = dx * dx + dy * dy || 1;
+        const force = Math.min(3200 / d2, 1.8);
+        const d = Math.sqrt(d2);
+        dx /= d; dy /= d;
+        a.vx -= dx * force; a.vy -= dy * force;
+        b.vx += dx * force; b.vy += dy * force;
+      }
+    }
+    layoutEdges.forEach(e => {
+      const dx = e.t.x - e.s.x, dy = e.t.y - e.s.y;
+      const d = Math.sqrt(dx * dx + dy * dy) || 1;
+      const force = (d - 160) * 0.012;
+      const fx = (dx / d) * force, fy = (dy / d) * force;
+      e.s.vx += fx; e.s.vy += fy;
+      e.t.vx -= fx; e.t.vy -= fy;
+    });
+    nodeById.forEach(n => {
+      n.vx += (width / 2 - n.x) * 0.004;
+      n.vy += (height / 2 - n.y) * 0.004;
+      n.x = Math.max(42, Math.min(width - 42, n.x + n.vx));
+      n.y = Math.max(42, Math.min(height - 42, n.y + n.vy));
+      n.vx *= 0.72; n.vy *= 0.72;
+    });
+  }
+
+  const degree = new Map();
+  edges.forEach(e => {
+    degree.set(e.source, (degree.get(e.source) || 0) + 1);
+    degree.set(e.target, (degree.get(e.target) || 0) + 1);
+  });
+  const selected = selectedGraphNodeId;
+  const edgeMarkup = layoutEdges.map(e => {
+    const hi = selected && (e.source === selected || e.target === selected);
+    return `<line class="graph-edge${hi ? " highlight" : ""}" x1="${e.s.x.toFixed(1)}" y1="${e.s.y.toFixed(1)}" x2="${e.t.x.toFixed(1)}" y2="${e.t.y.toFixed(1)}"></line>`;
+  }).join("");
+  const nodeMarkup = [...nodeById.values()].map(n => {
+    const d = degree.get(n.id) || 0;
+    const r = Math.min(24, 11 + d * 2 + (n.resolved ? 1 : 0));
+    const color = n.color || "#64748B";
+    const selectedClass = selected === n.id ? " selected" : "";
+    const unresolvedClass = n.resolved ? "" : " unresolved";
+    return `<g class="graph-node${selectedClass}${unresolvedClass}" onclick='selectGraphNode(${JSON.stringify(n.id)})'>
+      <circle cx="${n.x.toFixed(1)}" cy="${n.y.toFixed(1)}" r="${r}" fill="${escapeHtml(color)}"></circle>
+      <text x="${n.x.toFixed(1)}" y="${(n.y + r + 13).toFixed(1)}" text-anchor="middle">${escapeHtml(graphShortLabel(n.short))}</text>
+    </g>`;
+  }).join("");
+
+  return `<svg class="graph-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="本地论文引用关系图">
+    <defs>
+      <marker id="graph-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#4B7A9E"></path>
+      </marker>
+    </defs>
+    ${edgeMarkup}
+    ${nodeMarkup}
+  </svg>`;
+}
+
+function renderGraphDetail(nodes, edges) {
+  const nodeMap = new Map((citationGraph?.nodes || []).map(n => [n.id, n]));
+  const selected = selectedGraphNodeId ? nodeMap.get(selectedGraphNodeId) : null;
+  if (!selected) {
+    const topEdges = edges.slice(0, 8).map(e => {
+      const s = nodeMap.get(e.source), t = nodeMap.get(e.target);
+      return `<div class="graph-list-item">${escapeHtml(s?.short || e.source)} → ${escapeHtml(t?.short || e.target)}</div>`;
+    }).join("");
+    return `<div class="graph-side">
+      <h3>引用图详情</h3>
+      <div class="muted">选择一个节点查看它在本地库中的引用和被引用关系。</div>
+      <div class="graph-list">${topEdges || '<div class="graph-list-item">当前筛选下没有本地互引边。</div>'}</div>
+    </div>`;
+  }
+  const outgoing = (citationGraph?.edges || []).filter(e => e.source === selected.id);
+  const incoming = (citationGraph?.edges || []).filter(e => e.target === selected.id);
+  const relList = [
+    ...outgoing.map(e => ({ label: "引用", node: nodeMap.get(e.target) })),
+    ...incoming.map(e => ({ label: "被引用", node: nodeMap.get(e.source) })),
+  ].filter(x => x.node).map(x =>
+    `<div class="graph-list-item"><strong>${escapeHtml(x.label)}</strong> · ${escapeHtml(x.node.short)}<br><span class="muted">${escapeHtml(x.node.title)}</span></div>`
+  ).join("");
+  const openalexLink = selected.openalexUrl
+    ? `<a class="link link-arxiv" href="${escapeHtml(selected.openalexUrl.replace('api.', ''))}" target="_blank">↗ OpenAlex</a>`
+    : "";
+  return `<div class="graph-side">
+    <h3>${escapeHtml(selected.short)}</h3>
+    <div class="muted">${escapeHtml(selected.title)}</div>
+    <div class="graph-list">
+      <div class="graph-list-item">本地引用：${outgoing.length} · 本地被引用：${incoming.length}</div>
+      <div class="graph-list-item">OpenAlex：${selected.resolved ? "已匹配" : "未匹配"} · 外部参考文献：${selected.externalReferenceCount || 0}</div>
+      <div class="graph-list-item">刊会：${escapeHtml(selected.venue || "未填写")} · CCF：${escapeHtml(selected.ccf || "待补充")}</div>
+      ${openalexLink ? `<div class="graph-list-item">${openalexLink}</div>` : ""}
+    </div>
+    <div class="graph-list">${relList || '<div class="graph-list-item">这个节点当前没有本地互引关系。</div>'}</div>
+  </div>`;
+}
+
+function renderGraph(pool) {
+  if (!citationGraph && !citationGraphLoading && !citationGraphError) {
+    loadCitationGraph(false);
+  }
+  const poolIds = new Set(pool.map(p => p.id));
+  const graphNodes = (citationGraph?.nodes || state.papers.map(p => ({
+    id: p.id, short: p.short, title: p.title, cat: p.cat,
+    color: state.categories.find(c => c.id === p.cat)?.color || "#64748B",
+    resolved: false,
+  }))).filter(n => poolIds.has(n.id));
+  const visibleIds = new Set(graphNodes.map(n => n.id));
+  const graphEdges = (citationGraph?.edges || []).filter(e => visibleIds.has(e.source) && visibleIds.has(e.target));
+  if (selectedGraphNodeId && !visibleIds.has(selectedGraphNodeId)) selectedGraphNodeId = graphNodes[0]?.id || null;
+
+  const stats = citationGraph?.stats || {};
+  const builtAt = citationGraph?.builtAt ? new Date(citationGraph.builtAt).toLocaleString() : "尚未生成";
+  const warning = citationGraph?.warning ? `<div class="graph-pill" style="color:#F6C344">⚠ ${escapeHtml(citationGraph.warning)}</div>` : "";
+  main.innerHTML = `
+    <section class="section graph-shell">
+      <div class="section-head">
+        <span class="section-dot" style="background:#02C39A"></span>
+        <span class="section-title">本地论文引用图</span>
+        <span class="section-tag">OpenAlex · 本地节点互引</span>
+        <span class="section-count">${graphEdges.length} 条边</span>
+      </div>
+      <div class="graph-summary">
+        <span class="graph-pill">节点 ${graphNodes.length}/${state.papers.length}</span>
+        <span class="graph-pill">已匹配 ${stats.resolvedCount ?? "..."}</span>
+        <span class="graph-pill">未匹配 ${stats.unresolvedCount ?? "..."}</span>
+        <span class="graph-pill">更新时间 ${escapeHtml(builtAt)}</span>
+        ${warning}
+        ${citationGraphError ? `<span class="graph-pill" style="color:#F87171">加载失败：${escapeHtml(citationGraphError)}</span>` : ""}
+      </div>
+      <div class="graph-layout">
+        <div class="graph-canvas">
+          ${renderGraphSvg(graphNodes, graphEdges)}
+          ${citationGraphLoading ? '<div class="graph-empty"><div><strong>正在生成引用图</strong>首次生成需要访问 OpenAlex，可能需要几十秒。</div></div>' : ""}
+          ${!citationGraphLoading && citationGraph && graphEdges.length === 0 ? '<div class="graph-empty"><div><strong>当前筛选下没有发现本地互引边</strong>节点仍然显示；点击“更新引用图”可重新拉取 OpenAlex 数据。</div></div>' : ""}
+        </div>
+        ${renderGraphDetail(graphNodes, graphEdges)}
+      </div>
+    </section>`;
+}
+
+async function openPaperGraph(paperId, refresh=false) {
+  const paper = state.papers.find(p => p.id === paperId);
+  if (!paper) return;
+  currentPaperGraphId = paperId;
+  selectedPaperGraphNodeId = paperId;
+  paperGraphError = "";
+  document.getElementById("paper-graph-backdrop").classList.add("show");
+
+  if (!refresh && paperGraphCache.has(paperId)) {
+    renderPaperGraphModal();
+    return;
+  }
+
+  paperGraphLoadingId = paperId;
+  renderPaperGraphModal();
+  try {
+    const res = await fetch(`/api/paper-graph?id=${encodeURIComponent(paperId)}${refresh ? "&refresh=1" : ""}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "论文图谱加载失败");
+    paperGraphCache.set(paperId, data);
+    selectedPaperGraphNodeId = data.center?.id || paperId;
+    if (data.ok === false) paperGraphError = data.error || "OpenAlex 未匹配";
+  } catch (e) {
+    paperGraphError = e.message;
+  } finally {
+    paperGraphLoadingId = null;
+    renderPaperGraphModal();
+  }
+}
+
+function closePaperGraph() {
+  document.getElementById("paper-graph-backdrop").classList.remove("show");
+  currentPaperGraphId = null;
+  selectedPaperGraphNodeId = null;
+  paperGraphError = "";
+}
+
+function refreshPaperGraph() {
+  if (currentPaperGraphId) openPaperGraph(currentPaperGraphId, true);
+}
+
+function selectPaperGraphNode(nodeId) {
+  selectedPaperGraphNodeId = nodeId;
+  renderPaperGraphModal();
+}
+
+function paperNodeUrl(node) {
+  return node?.url || node?.pdfUrl || node?.doi || node?.openalexUrl || "";
+}
+
+function openalexDisplayUrl(node) {
+  return node?.openalexUrl ? String(node.openalexUrl).replace("https://api.openalex.org/", "https://openalex.org/").replace("api.", "") : "";
+}
+
+function renderPaperRadialSvg(graph) {
+  const center = graph?.center;
+  const refs = graph?.references || [];
+  const width = 980;
+  const height = 720;
+  const cx = width / 2;
+  const cy = height / 2;
+  const ringSize = 24;
+  const ringCount = Math.max(1, Math.ceil(refs.length / ringSize));
+  const minRadius = refs.length > 12 ? 150 : 220;
+  const maxRadius = Math.min(cx, cy) - 58;
+  const selectedId = selectedPaperGraphNodeId || center?.id;
+  const placedRefs = refs.map((node, i) => {
+    const ring = Math.floor(i / ringSize);
+    const ringStart = ring * ringSize;
+    const inRing = Math.min(ringSize, refs.length - ringStart);
+    const idx = i - ringStart;
+    const radius = ringCount === 1 ? minRadius : minRadius + (maxRadius - minRadius) * (ring / (ringCount - 1));
+    const angle = -Math.PI / 2 + (Math.PI * 2 * idx) / Math.max(inRing, 1) + (ring % 2 ? Math.PI / Math.max(inRing, 1) : 0);
+    return {
+      ...node,
+      x: cx + Math.cos(angle) * radius,
+      y: cy + Math.sin(angle) * radius,
+      radius: node.local ? 9 : 6,
+    };
+  });
+
+  const edgeMarkup = placedRefs.map(node => {
+    const cls = node.local ? " local" : "";
+    return `<line class="paper-radial-edge${cls}" x1="${cx}" y1="${cy}" x2="${node.x.toFixed(1)}" y2="${node.y.toFixed(1)}"></line>`;
+  }).join("");
+  const refMarkup = placedRefs.map(node => {
+    const selected = selectedId === node.id ? " selected" : "";
+    const kind = node.local ? "local" : "external";
+    const label = node.local ? node.short : (node.publicationYear || graphShortLabel(node.title));
+    return `<g class="paper-graph-node ${kind}${selected}" onclick='selectPaperGraphNode(${JSON.stringify(node.id)})'>
+      <title>${escapeHtml(node.title)} · 当前论文引用该论文</title>
+      <circle cx="${node.x.toFixed(1)}" cy="${node.y.toFixed(1)}" r="${node.radius}" fill="${escapeHtml(node.color || "#6A9BBF")}"></circle>
+      <text x="${node.x.toFixed(1)}" y="${(node.y + node.radius + 12).toFixed(1)}" text-anchor="middle">${escapeHtml(graphShortLabel(label))}</text>
+    </g>`;
+  }).join("");
+  const centerColor = center?.color || "#68D8B5";
+  const centerMarkup = center ? `<g class="paper-graph-node center${selectedId === center.id ? " selected" : ""}" onclick='selectPaperGraphNode(${JSON.stringify(center.id)})'>
+    <title>${escapeHtml(center.title)}</title>
+    <circle cx="${cx}" cy="${cy}" r="24" fill="${escapeHtml(centerColor)}"></circle>
+    <text x="${cx}" y="${cy + 42}" text-anchor="middle">${escapeHtml(graphShortLabel(center.short))}</text>
+  </g>` : "";
+
+  return `<svg class="paper-radial-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="当前论文引用关系放射图">
+    <defs>
+      <marker id="paper-radial-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#315A7A"></path>
+      </marker>
+    </defs>
+    ${edgeMarkup}
+    ${refMarkup}
+    ${centerMarkup}
+  </svg>`;
+}
+
+function renderPaperGraphPanel(graph) {
+  const nodes = graph?.nodes || [];
+  const refs = graph?.references || [];
+  const selected = nodes.find(n => n.id === selectedPaperGraphNodeId) || graph?.center || null;
+  if (!selected) {
+    return `<div class="paper-graph-panel"><h3>引用详情</h3><div class="muted">正在等待图谱数据。</div></div>`;
+  }
+  const isCenter = selected.id === graph.center?.id;
+  const relation = isCenter ? "中心论文" : "关系：中心论文 → 引用 → 当前节点";
+  const scope = isCenter ? "本地库论文" : (selected.local ? "本地库内参考文献" : "外部参考文献");
+  const primaryUrl = paperNodeUrl(selected);
+  const openalexUrl = openalexDisplayUrl(selected);
+  const linkBits = [
+    primaryUrl ? `<a class="link link-arxiv" href="${escapeHtml(primaryUrl)}" target="_blank">↗ 打开链接</a>` : "",
+    openalexUrl ? `<a class="link link-arxiv" href="${escapeHtml(openalexUrl)}" target="_blank">↗ OpenAlex</a>` : "",
+    selected.pdfUrl ? `<a class="link link-arxiv" href="${escapeHtml(selected.pdfUrl)}" target="_blank">↗ PDF</a>` : "",
+  ].filter(Boolean).join("");
+  const refList = refs.map((node, i) => {
+    const active = selected.id === node.id ? " active" : "";
+    const meta = [
+      node.local ? "本地库" : "外部",
+      node.publicationYear || "",
+      node.sourceName || node.venue || "",
+      node.citationCount != null ? `被引 ${node.citationCount}` : "",
+    ].filter(Boolean).join(" · ");
+    return `<button class="paper-ref-item${active}" onclick='selectPaperGraphNode(${JSON.stringify(node.id)})'>
+      ${i + 1}. 引用 · ${escapeHtml(node.local ? node.short : graphShortLabel(node.title))}
+      <span class="ref-meta">${escapeHtml(meta || "OpenAlex reference")}</span>
+    </button>`;
+  }).join("");
+
+  return `<div class="paper-graph-panel">
+    <h3>${escapeHtml(selected.short || selected.publicationYear || "参考文献")}</h3>
+    <div class="muted">${escapeHtml(selected.title || "")}</div>
+    <div class="graph-list">
+      <div class="graph-list-item">${escapeHtml(relation)} · ${escapeHtml(scope)}</div>
+      <div class="graph-list-item">年份：${escapeHtml(selected.publicationYear || "未知")} · 来源：${escapeHtml(selected.sourceName || selected.venue || "未知")}</div>
+      <div class="graph-list-item">被引：${selected.citationCount ?? "未知"} · DOI：${escapeHtml(selected.doi || "未提供")}</div>
+      ${linkBits ? `<div class="graph-list-item">${linkBits}</div>` : ""}
+    </div>
+    <div class="paper-ref-list">${refList || '<div class="paper-ref-item">OpenAlex 没有返回参考文献。</div>'}</div>
+  </div>`;
+}
+
+function renderPaperGraphModal() {
+  const paper = state.papers.find(p => p.id === currentPaperGraphId);
+  const graph = currentPaperGraphId ? paperGraphCache.get(currentPaperGraphId) : null;
+  const loading = paperGraphLoadingId === currentPaperGraphId;
+  const content = document.getElementById("paper-graph-content");
+  const title = document.getElementById("paper-graph-title");
+  const subtitle = document.getElementById("paper-graph-subtitle");
+  const refreshBtn = document.getElementById("paper-graph-refresh");
+  if (!content) return;
+  if (title) title.textContent = paper ? `知识图谱 · ${paper.short}` : "论文知识图谱";
+  if (subtitle) subtitle.textContent = paper ? paper.title : "以当前论文为中心，展开它引用的参考文献。";
+  if (refreshBtn) {
+    refreshBtn.disabled = loading;
+    refreshBtn.textContent = loading ? "正在更新..." : "更新图谱";
+  }
+
+  if (!graph && loading) {
+    content.innerHTML = `<div class="paper-graph-body">
+      <div class="paper-graph-canvas"><div class="paper-graph-loading"><div><strong>正在生成知识图谱</strong>正在匹配 OpenAlex 并拉取当前论文的全部参考文献。</div></div></div>
+      <div class="paper-graph-panel"><h3>引用详情</h3><div class="muted">首次打开可能需要几秒钟，之后会使用本地缓存。</div></div>
+    </div>`;
+    return;
+  }
+
+  const stats = graph?.stats || {};
+  const summary = graph ? `<div class="paper-graph-summary">
+    <span class="graph-pill">参考文献 ${stats.referenceCount ?? 0}</span>
+    <span class="graph-pill">本地库 ${stats.localReferenceCount ?? 0}</span>
+    <span class="graph-pill">外部 ${stats.externalReferenceCount ?? 0}</span>
+    <span class="graph-pill">更新时间 ${escapeHtml(graph.builtAt ? new Date(graph.builtAt).toLocaleString() : "尚未生成")}</span>
+  </div>` : "";
+  const errorMarkup = (paperGraphError || graph?.error)
+    ? `<div class="paper-graph-error"><div><strong>图谱数据不完整</strong>${escapeHtml(paperGraphError || graph.error)}</div></div>`
+    : "";
+  content.innerHTML = `${summary}
+    <div class="paper-graph-body">
+      <div class="paper-graph-canvas">
+        ${graph ? renderPaperRadialSvg(graph) : ""}
+        ${loading ? '<div class="paper-graph-loading"><div><strong>正在更新知识图谱</strong>正在重新拉取 OpenAlex 数据。</div></div>' : ""}
+        ${errorMarkup}
+      </div>
+      ${graph ? renderPaperGraphPanel(graph) : '<div class="paper-graph-panel"><h3>引用详情</h3><div class="muted">没有可显示的数据。</div></div>'}
+    </div>`;
+}
+
+function autoResizeNoteEditor() {
+  const editor = document.getElementById("paper-note-editor");
+  if (!editor) return;
+  editor.style.height = "auto";
+  editor.style.height = Math.max(620, Math.min(editor.scrollHeight + 2, 2600)) + "px";
+}
+
+function openPaperNote(paperId) {
+  const paper = state.papers.find(p => p.id === paperId);
+  if (!paper) return;
+  editingNotePaperId = paperId;
+  clearTimeout(noteSaveTimer);
+  const title = document.getElementById("paper-note-title");
+  const subtitle = document.getElementById("paper-note-subtitle");
+  const status = document.getElementById("paper-note-status");
+  const editor = document.getElementById("paper-note-editor");
+  title.textContent = `论文笔记 · ${paper.short}`;
+  subtitle.textContent = paper.title || "Markdown / 纯文本";
+  status.textContent = paper.readingNoteUpdatedAt ? `已保存 ${new Date(paper.readingNoteUpdatedAt).toLocaleString()}` : "";
+  editor.value = paper.readingNote || "";
+  document.getElementById("paper-note-backdrop").classList.add("show");
+  setTimeout(() => { editor.focus(); autoResizeNoteEditor(); }, 0);
+}
+
+function flushPaperNoteSave() {
+  if (!editingNotePaperId) return;
+  const paper = state.papers.find(p => p.id === editingNotePaperId);
+  const editor = document.getElementById("paper-note-editor");
+  if (!paper || !editor) return;
+  clearTimeout(noteSaveTimer);
+  const value = editor.value;
+  if ((paper.readingNote || "") === value) return;
+  paper.readingNote = value;
+  paper.readingNoteUpdatedAt = new Date().toISOString();
+  document.getElementById("paper-note-status").textContent = "保存中...";
+  saveData().then(() => {
+    if (editingNotePaperId === paper.id) {
+      document.getElementById("paper-note-status").textContent = `已保存 ${new Date(paper.readingNoteUpdatedAt).toLocaleString()}`;
+    }
+  });
+}
+
+function schedulePaperNoteSave() {
+  if (!editingNotePaperId) return;
+  const paper = state.papers.find(p => p.id === editingNotePaperId);
+  const editor = document.getElementById("paper-note-editor");
+  if (!paper || !editor) return;
+  paper.readingNote = editor.value;
+  paper.readingNoteUpdatedAt = new Date().toISOString();
+  document.getElementById("paper-note-status").textContent = "编辑中...";
+  autoResizeNoteEditor();
+  clearTimeout(noteSaveTimer);
+  noteSaveTimer = setTimeout(() => {
+    document.getElementById("paper-note-status").textContent = "保存中...";
+    saveData().then(() => {
+      if (editingNotePaperId === paper.id) {
+        document.getElementById("paper-note-status").textContent = `已保存 ${new Date(paper.readingNoteUpdatedAt).toLocaleString()}`;
+      }
+    });
+  }, 700);
+}
+
+function closePaperNote() {
+  flushPaperNoteSave();
+  document.getElementById("paper-note-backdrop").classList.remove("show");
+  editingNotePaperId = null;
+  clearTimeout(noteSaveTimer);
+  render();
+}
+
+function wrapNoteSelection(before, after) {
+  const editor = document.getElementById("paper-note-editor");
+  const start = editor.selectionStart;
+  const end = editor.selectionEnd;
+  const selected = editor.value.slice(start, end);
+  editor.setRangeText(before + selected + after, start, end, "select");
+  editor.selectionStart = start + before.length;
+  editor.selectionEnd = start + before.length + selected.length;
+  editor.focus();
+  schedulePaperNoteSave();
+}
+
+function prefixNoteLine(prefix) {
+  const editor = document.getElementById("paper-note-editor");
+  const start = editor.selectionStart;
+  const lineStart = editor.value.lastIndexOf("\n", Math.max(0, start - 1)) + 1;
+  editor.setRangeText(prefix, lineStart, lineStart, "end");
+  editor.focus();
+  schedulePaperNoteSave();
+}
+
+function renderAbstractList(pool) {
+  if (pool.length === 0) {
+    main.innerHTML = '<div class="abstract-empty">当前筛选条件下没有论文。</div>';
+    return;
+  }
+  const html = pool.map(p => {
+    const cat = state.categories.find(c => c.id === p.cat);
+    const accent = cat?.color || '#64748B';
+    const titleAttr = escapeHtml(`${p.short} — ${p.title}`);
+    const venueName = getVenueName(p);
+    const venueMeta = getVenueTypeMeta(p.venueType);
+    const ccfRank = getCcfRank(p);
+    const ccfMeta = getCcfMeta(ccfRank);
+    const track = getVenueTrack(p);
+    const trackMeta = getVenueTrackMeta(track);
+
+    const metaRow = [];
+    if (venueName) metaRow.push(`<span class="venue-badge ${venueMeta.cls}">${escapeHtml(venueMeta.label)} · ${escapeHtml(venueName)}</span>`);
+    if (track) metaRow.push(`<span class="track-badge ${trackMeta.cls}">${escapeHtml(trackMeta.label)}</span>`);
+    if (ccfRank) metaRow.push(`<span class="ccf-badge ${ccfMeta.cls}">${escapeHtml(ccfMeta.label)}</span>`);
+    if (p.org) metaRow.push(`<span class="org-badge ${p.orgType||''}">${p.orgType==='school'?'🎓':p.orgType==='lab'?'🔬':'🏢'} ${escapeHtml(p.org)}</span>`);
+
+    const links = [];
+    if (p.pdf) links.push(`<button class="link link-pdf" onclick="openPdf('${encodeURIComponent(p.pdf)}', '${titleAttr}', '${p.id}')">📄 PDF</button>`);
+    if (p.arxiv) links.push(`<a class="link link-arxiv" href="https://arxiv.org/abs/${p.arxiv}" target="_blank">↗ arXiv</a>`);
+    if (p.url) links.push(`<a class="link link-arxiv" href="${escapeHtml(p.url)}" target="_blank">↗ 链接</a>`);
+    if (p.code) links.push(`<a class="link link-arxiv" href="${escapeHtml(p.code)}" target="_blank">↗ Code</a>`);
+
+    const abstract = (p.abstract || p.note || "").trim();
+    const abstractCn = (p.abstract_cn || "").trim();
+    // Use tags as keywords fallback if no dedicated keywords field
+    const keywords = Array.isArray(p.keywords) && p.keywords.length > 0
+      ? p.keywords
+      : (Array.isArray(p.tags) && p.tags.length > 0 ? p.tags.filter(t => !t.startsWith('类型:') && !t.startsWith('主系统:') && !t.startsWith('系统:') && !t.startsWith('主题:')) : []);
+
+    return `
+    <div class="abstract-item" style="--accent:${accent}" data-id="${escapeHtml(p.id)}">
+      <div class="abstract-left">
+        <div class="abstract-title">
+          <span class="abstract-short">${escapeHtml(p.short)}</span>${escapeHtml(p.title)}
+        </div>
+        <div class="abstract-meta-row">${metaRow.join("")}</div>
+        <div class="abstract-links">${links.join("")}</div>
+      </div>
+      <div class="abstract-right">
+        ${abstract ? `<div class="abstract-label">Abstract</div><div class="abstract-text">${escapeHtml(abstract)}</div>` : '<div class="abstract-label">Abstract</div><div class="abstract-text" style="color:#4B7A9E;font-style:italic;">No abstract available</div>'}
+        ${abstractCn ? `<div class="abstract-label" style="margin-top:14px;color:#68D8B5;">中文摘要</div><div class="abstract-text abstract-text-cn">${escapeHtml(abstractCn)}</div>` : ""}
+        ${keywords.length > 0 ? `<div class="abstract-keywords"><div class="abstract-label">关键词</div>${keywords.map(k => `<span class="kw-tag">${escapeHtml(k)}</span>`).join("")}</div>` : ""}
+      </div>
+    </div>`;
+  }).join("");
+  main.innerHTML = `<div class="abstract-list">${html}</div>`;
+  attachHighlightListeners();
+}
+
+function renderIntroductionList(pool) {
+  if (pool.length === 0) {
+    main.innerHTML = '<div class="abstract-empty">当前筛选条件下没有论文。</div>';
+    return;
+  }
+  const html = pool.map(p => {
+    const cat = state.categories.find(c => c.id === p.cat);
+    const accent = cat?.color || '#64748B';
+    const titleAttr = escapeHtml(`${p.short} — ${p.title}`);
+    const venueName = getVenueName(p);
+    const venueMeta = getVenueTypeMeta(p.venueType);
+    const ccfRank = getCcfRank(p);
+    const ccfMeta = getCcfMeta(ccfRank);
+    const track = getVenueTrack(p);
+    const trackMeta = getVenueTrackMeta(track);
+
+    const metaRow = [];
+    if (venueName) metaRow.push(`<span class="venue-badge ${venueMeta.cls}">${escapeHtml(venueMeta.label)} · ${escapeHtml(venueName)}</span>`);
+    if (track) metaRow.push(`<span class="track-badge ${trackMeta.cls}">${escapeHtml(trackMeta.label)}</span>`);
+    if (ccfRank) metaRow.push(`<span class="ccf-badge ${ccfMeta.cls}">${escapeHtml(ccfMeta.label)}</span>`);
+    if (p.org) metaRow.push(`<span class="org-badge ${p.orgType||''}">${p.orgType==='school'?'🎓':p.orgType==='lab'?'🔬':'🏢'} ${escapeHtml(p.org)}</span>`);
+
+    const links = [];
+    if (p.pdf) links.push(`<button class="link link-pdf" onclick="openPdf('${encodeURIComponent(p.pdf)}', '${titleAttr}', '${p.id}')">📄 PDF</button>`);
+    if (p.arxiv) links.push(`<a class="link link-arxiv" href="https://arxiv.org/abs/${p.arxiv}" target="_blank">↗ arXiv</a>`);
+    if (p.url) links.push(`<a class="link link-arxiv" href="${escapeHtml(p.url)}" target="_blank">↗ 链接</a>`);
+    if (p.code) links.push(`<a class="link link-arxiv" href="${escapeHtml(p.code)}" target="_blank">↗ Code</a>`);
+
+    let intro = (p.introduction || "").trim();
+    
+    // Build figure gallery from extracted images
+    const figDir = 'references/figures/';
+    
+    // Replace figure references with embedded images
+    intro = intro.replace(/Figure\s+(\d+)(?::\s*([\s\S]*?))?(?=\n\s*\n|\n\s*[•\-\*\d]|\n\s*Figure|\n\s*Table|$)/gi, (match, num, caption) => {
+      const figFile = `${p.id}_fig${num}.png`;
+      const imgHtml = `<img src="${figDir}${figFile}" class="intro-figure-img" alt="Figure ${num}" onerror="this.style.display='none'" loading="lazy">`;
+      const cap = caption ? caption.trim().replace(/\s+/g, ' ').slice(0, 80) + (caption.trim().length > 80 ? '…' : '') : '';
+      return `<div class="intro-figure-box"><div class="intro-figure-label">Figure ${num}${cap ? ': ' + cap : ''}</div>${imgHtml}</div>`;
+    });
+    // Also handle "Fig." abbreviation
+    intro = intro.replace(/Fig\.\s+(\d+)(?::\s*([\s\S]*?))?(?=\n\s*\n|\n\s*[•\-\*\d]|\n\s*Fig|\n\s*Table|$)/gi, (match, num, caption) => {
+      const figFile = `${p.id}_fig${num}.png`;
+      const imgHtml = `<img src="${figDir}${figFile}" class="intro-figure-img" alt="Fig. ${num}" onerror="this.style.display='none'" loading="lazy">`;
+      const cap = caption ? caption.trim().replace(/\s+/g, ' ').slice(0, 80) + (caption.trim().length > 80 ? '…' : '') : '';
+      return `<div class="intro-figure-box"><div class="intro-figure-label">Fig. ${num}${cap ? ': ' + cap : ''}</div>${imgHtml}</div>`;
+    });
+    
+    // Convert citation references [N] to clickable links that open in right panel
+    intro = intro.replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g, (match, citationList) => {
+      const nums = citationList.split(/\s*,\s*/).map(n => n.trim());
+      const links = nums.map(num => {
+        const searchQuery = encodeURIComponent(`${p.title} citation ${num}`);
+        return `<span class="intro-citation-link" onclick="openCiteUrl('https://scholar.google.com/scholar?q=${searchQuery}', '引用 [${num}] - ${escapeHtml(p.short)}')">[${num}]</span>`;
+      });
+      return links.join(', ');
+    });
+    
+    // Convert author-year citations (Author et al., Year) to clickable
+    intro = intro.replace(/\(([A-Z][a-z]+(?:\s+et\s+al\.)?),\s*(\d{4}[a-z]?)\)/g, (match, author, year) => {
+      const searchQuery = encodeURIComponent(`${author.replace(' et al.', '')} ${year}`);
+      return `<span class="intro-citation-link" onclick="openCiteUrl('https://scholar.google.com/scholar?q=${searchQuery}', '${author}, ${year}')">(${author}, ${year})</span>`;
+    });
+    
+    // Convert arXiv references to clickable links
+    intro = intro.replace(/arXiv:(\d{4}\.\d{4,5})/gi, (match, arxivId) => {
+      return `<span class="intro-citation-link" onclick="openCiteUrl('https://arxiv.org/abs/${arxivId}', 'arXiv:${arxivId}')">arXiv:${arxivId}</span>`;
+    });
+    
+    // Convert URLs to clickable links
+    intro = intro.replace(/(https?:\/\/[^\s\)\]\>]+)/g, (match, url) => {
+      const cleanUrl = url.replace(/[.,;]$/, '');
+      return `<span class="intro-citation-link" onclick="openCiteUrl('${cleanUrl}', '${cleanUrl}')">${cleanUrl}</span>`;
+    });
+
+    return `
+    <div class="abstract-item intro-item" style="--accent:${accent}" data-id="${escapeHtml(p.id)}">
+      <div class="abstract-left">
+        <div class="abstract-title">
+          <span class="abstract-short">${escapeHtml(p.short)}</span>${escapeHtml(p.title)}
+        </div>
+        <div class="abstract-meta-row">${metaRow.join("")}</div>
+        <div class="abstract-links">${links.join("")}</div>
+      </div>
+      <div class="abstract-right">
+        ${intro ? `<div class="abstract-label">Introduction</div><div class="abstract-text intro-text">${intro}</div>` : '<div class="abstract-label">Introduction</div><div class="abstract-text" style="color:#4B7A9E;font-style:italic;">暂无 Introduction</div>'}
+      </div>
+    </div>`;
+  }).join("");
+  main.innerHTML = `<div class="abstract-list">${html}</div>`;
+  attachHighlightListeners();
+}
+
+function attachHighlightListeners() {
+  const abstractTexts = document.querySelectorAll('.abstract-text');
+  abstractTexts.forEach(el => {
+    el.addEventListener('mouseup', handleTextSelection);
+    el.addEventListener('click', handleHighlightClick);
+  });
+}
+
+function handleTextSelection(e) {
+  const selection = window.getSelection();
+  if (!selection || selection.isCollapsed) return;
+  
+  const selectedText = selection.toString().trim();
+  if (!selectedText) return;
+  
+  // Check if selection is within abstract-text
+  const container = e.currentTarget;
+  if (!container.contains(selection.anchorNode)) return;
+  
+  try {
+    const range = selection.getRangeAt(0);
+    
+    // Don't highlight if already inside a highlight
+    if (range.commonAncestorContainer.parentElement?.classList?.contains('highlight-yellow')) {
+      selection.removeAllRanges();
+      return;
+    }
+    
+    const span = document.createElement('span');
+    span.className = 'highlight-yellow';
+    span.title = '点击取消高亮';
+    
+    range.surroundContents(span);
+    selection.removeAllRanges();
+  } catch (err) {
+    // Complex selection (crosses elements) - ignore
+    selection.removeAllRanges();
+  }
+}
+
+function handleHighlightClick(e) {
+  if (e.target.classList.contains('highlight-yellow')) {
+    const highlight = e.target;
+    const parent = highlight.parentNode;
+    
+    // Replace highlight span with its text content
+    const textNode = document.createTextNode(highlight.textContent);
+    parent.replaceChild(textNode, highlight);
+    parent.normalize();
+  }
+}
+
+function render() {
+  main.innerHTML = "";
+  const q = document.getElementById("search").value.trim().toLowerCase();
+  let pool = state.papers.filter(p => matchQuery(p, q));
+  if (activeFilter !== "all") pool = pool.filter(matchesActiveFilter);
+
+  if (viewMode === "abstract") {
+    renderAbstractList(pool);
+    updateActiveCard();
+    return;
+  }
+
+  if (viewMode === "introduction") {
+    renderIntroductionList(pool);
+    updateActiveCard();
+    return;
+  }
+
+  if (viewMode === "graph") {
+    renderGraph(pool);
+    return;
+  }
+
+  if (viewMode === "org") {
+    const orderMap = { company: 0, school: 1, lab: 2, "": 3 };
+    renderGroupedSections(
+      pool,
+      p => ({ key: p.org || "（未指定机构）", org: p.org || "", orgType: p.orgType || "" }),
+      (a, b) => {
+        const oa = orderMap[a.orgType ?? ""] ?? 9, ob = orderMap[b.orgType ?? ""] ?? 9;
+        if (oa !== ob) return oa - ob;
+        if (b.papers.length !== a.papers.length) return b.papers.length - a.papers.length;
+        return a.key.localeCompare(b.key);
+      },
+      g => {
+        const typeBadge = g.orgType === "company" ? '<span class="org-badge company">🏢 公司</span>'
+                        : g.orgType === "school"  ? '<span class="org-badge school">🎓 学校</span>'
+                        : g.orgType === "lab"     ? '<span class="org-badge lab">🔬 实验室</span>' : '';
+        return {
+          color: g.orgType === "school" ? "#60A5FA" : g.orgType === "lab" ? "#FBBF24" : "#C084FC",
+          title: `${typeBadge}${escapeHtml(g.key)}`,
+        };
+      }
+    );
+    updateActiveCard();
+    return;
+  }
+
+  if (viewMode === "venueType") {
+    renderGroupedSections(
+      pool,
+      p => {
+        const key = normalizeVenueType(p.venueType);
+        return { key, meta: getVenueTypeMeta(key) };
+      },
+      (a, b) => a.meta.order - b.meta.order || b.papers.length - a.papers.length,
+      g => ({ color: g.meta.color, title: escapeHtml(g.meta.label) })
+    );
+    updateActiveCard();
+    return;
+  }
+
+  if (viewMode === "ccf") {
+    renderGroupedSections(
+      pool,
+      p => {
+        const key = getCcfRank(p);
+        return { key, meta: getCcfMeta(key) };
+      },
+      (a, b) => a.meta.order - b.meta.order || b.papers.length - a.papers.length,
+      g => ({ color: g.meta.color, title: escapeHtml(g.meta.label) })
+    );
+    updateActiveCard();
+    return;
+  }
+
+  if (viewMode === "track") {
+    renderGroupedSections(
+      pool,
+      p => {
+        const key = getVenueTrack(p);
+        return { key, meta: getVenueTrackMeta(key) };
+      },
+      (a, b) => a.meta.order - b.meta.order || b.papers.length - a.papers.length,
+      g => ({ color: g.meta.color, title: escapeHtml(g.meta.label) })
+    );
+    updateActiveCard();
+    return;
+  }
+
+  if (viewMode === "venue") {
+    renderGroupedSections(
+      pool,
+      p => {
+        const venue = getVenueName(p) || "（未填写刊会）";
+        return { key: venue, venueType: normalizeVenueType(p.venueType), meta: getVenueTypeMeta(p.venueType) };
+      },
+      (a, b) => {
+        if (a.key === "（未填写刊会）") return 1;
+        if (b.key === "（未填写刊会）") return -1;
+        if (b.papers.length !== a.papers.length) return b.papers.length - a.papers.length;
+        return a.key.localeCompare(b.key);
+      },
+      g => ({ color: g.meta.color, title: escapeHtml(g.key), tag: escapeHtml(g.meta.label) })
+    );
+    updateActiveCard();
+    return;
+  }
+
+  const sections = (activeFilter === "all" || activeFilter === "starred" || activeFilter.startsWith("type:"))
+    ? state.categories
+    : state.categories.filter(c => c.id === activeFilter);
+
+  for (const s of sections) {
+    const subset = pool.filter(p => p.cat === s.id);
+    if (subset.length === 0) continue;
+    const section = document.createElement("section");
+    section.className = "section";
+    section.innerHTML = `
+      <div class="section-head">
+        <span class="section-dot" style="background:${s.color}"></span>
+        <span class="section-title">${escapeHtml(s.title)}</span>
+        <span class="section-tag">${escapeHtml(s.tag)}</span>
+        <span class="section-count">${subset.length} 篇</span>
+      </div>
+      <div class="grid">${subset.map(renderCard).join("")}</div>`;
+    main.appendChild(section);
+  }
+  updateActiveCard();
+}
+
+function renderCard(p) {
+  const titleAttr = escapeHtml(`${p.short} — ${p.title}`);
+  const thumbUrl = p.url ? p.url : (p.arxiv ? `https://arxiv.org/abs/${p.arxiv}` : "");
+  const thumbClick = p.pdf
+    ? `onclick="openPdf('${encodeURIComponent(p.pdf)}', '${titleAttr}', '${p.id}')"`
+    : (thumbUrl ? `onclick="openUrl(${JSON.stringify(thumbUrl).replace(/"/g,'&quot;')}, '${titleAttr}', '${p.id}')"` : "");
+  const thumbMissingText = p.pdf ? "缺少缩略图" : (p.arxiv ? "未下载 PDF" : (p.url ? "外部链接" : "无预览"));
+  const thumbMedia = p.thumb
+    ? `<img class="card-thumb" src="references/thumbs/${encodeURIComponent(p.thumb)}" alt="${escapeHtml(p.short)}" ${thumbClick} loading="lazy">`
+    : `<div class="card-thumb-placeholder" ${thumbClick} style="${thumbUrl?'cursor:pointer':''}">${thumbMissingText}</div>`;
+  const graphButton = p.type === "product"
+    ? ""
+    : `<button class="paper-graph-btn" title="打开论文知识图谱" onclick='event.stopPropagation();openPaperGraph(${JSON.stringify(p.id)})'>◎</button>`;
+  const noteButton = p.type === "product"
+    ? ""
+    : `<button class="paper-note-btn${p.readingNote ? " has-note" : ""}" title="打开论文笔记" onclick='event.stopPropagation();openPaperNote(${JSON.stringify(p.id)})'>✎</button>`;
+  const ratingControl = p.type === "product" ? "" : renderRatingControl(p);
+  const thumb = `<div class="card-thumb-wrap">${thumbMedia}${graphButton}${noteButton}${ratingControl}</div>`;
+  const typeTag = p.type === "product" ? `<span class="type-tag" style="background:#3A1F5C;color:#C084FC">产品</span>` : "";
+  const orgBadge = p.org
+    ? `<span class="org-badge ${p.orgType||''}">${p.orgType==='school'?'🎓':p.orgType==='lab'?'🔬':'🏢'} ${escapeHtml(p.org)}</span>`
+    : "";
+  const venueName = getVenueName(p);
+  const venueMeta = getVenueTypeMeta(p.venueType);
+  const venueBadge = venueName
+    ? `<span class="venue-badge ${venueMeta.cls}">${escapeHtml(venueMeta.label)} · ${escapeHtml(venueName)}</span>`
+    : "";
+  const ccfRank = getCcfRank(p);
+  const ccfMeta = getCcfMeta(ccfRank);
+  const ccfBadge = p.ccf !== undefined && p.ccf !== null && String(p.ccf).trim()
+    ? `<span class="ccf-badge ${ccfMeta.cls}">${escapeHtml(ccfMeta.label)}</span>`
+    : "";
+  const track = getVenueTrack(p);
+  const trackMeta = getVenueTrackMeta(track);
+  const trackBadge = track
+    ? `<span class="track-badge ${trackMeta.cls}">${escapeHtml(trackMeta.label)}</span>`
+    : "";
+  const metaRow = (orgBadge || venueBadge || ccfBadge || trackBadge)
+    ? `<div class="meta-row">${venueBadge}${trackBadge}${ccfBadge}${orgBadge}</div>`
+    : "";
+  const pdfBtn = p.pdf
+    ? `<button class="link link-pdf" onclick="openPdf('${encodeURIComponent(p.pdf)}', '${titleAttr}', '${p.id}')">📄 PDF</button>`
+    : "";
+  const tags = Array.isArray(p.tags) && p.tags.length
+    ? `<div class="tag-row">${p.tags.map(t => `<span class="tag-pill">${escapeHtml(t)}</span>`).join("")}</div>`
+    : "";
+  const sourceBtn = p.arxiv
+    ? `<a class="link link-arxiv" href="https://arxiv.org/abs/${p.arxiv}" target="_blank">↗ arXiv</a>`
+    : (p.url ? `<a class="link link-arxiv" href="${escapeHtml(p.url)}" target="_blank">↗ 官网</a>` : "");
+  const extraUrlBtn = p.arxiv && p.url
+    ? `<a class="link link-arxiv" href="${escapeHtml(p.url)}" target="_blank">↗ 链接</a>`
+    : "";
+  const codeBtn = p.code
+    ? `<a class="link link-arxiv" href="${escapeHtml(p.code)}" target="_blank">↗ Code</a>`
+    : "";
+  let sourceId = "";
+  try { sourceId = p.arxiv || (p.url ? new URL(p.url.startsWith("http")?p.url:"https://"+p.url).hostname : ""); } catch(_){}
+  const selectOptions = state.categories.map(c =>
+    `<option value="${c.id}" ${c.id===p.cat?"selected":""}>${c.title}</option>`
+  ).join("") + `<option value="__new__">＋ 添加分类</option>`;
+  return `
+  <div class="card ${p.cat}${activePaperId===p.id?" active":""}${bulkSelected.has(p.id)?" bulk-selected":""}" data-id="${escapeHtml(p.id)}" style="--accent:${state.categories.find(c=>c.id===p.cat)?.color||'#64748B'}">
+    <input type="checkbox" class="card-check" ${bulkSelected.has(p.id)?'checked':''} onclick="event.stopPropagation();toggleBulkSelect('${p.id}',this.checked)">
+    <button class="card-star-btn${p.star?' starred':''}" title="切换收藏" onclick="event.stopPropagation();toggleStar('${p.id}')">★</button>
+    ${thumb}
+    <div class="card-body">
+      <div class="card-title">
+        ${typeTag}<span class="short">${escapeHtml(p.short)}</span>
+        ${escapeHtml(p.title)}
+      </div>
+      ${metaRow}
+      ${tags}
+      <div class="card-note">${escapeHtml(p.note||'')}</div>
+      <div class="card-controls">
+        <select class="card-select" onchange="changeCategory('${p.id}',this.value,this)">${selectOptions}</select>
+        <button class="icon-btn" title="编辑" onclick='openModal(${JSON.stringify(p.id)})'>✎</button>
+      </div>
+      <div class="card-links">${pdfBtn}${sourceBtn}${extraUrlBtn}${codeBtn}<span class="arxiv-id">${escapeHtml(sourceId)}</span></div>
+    </div>
+  </div>`;
+}
+
+// ── Modal ──
+function openModal(id=null) {
+  editingId = id;
+  const deleteBtn = document.getElementById("delete-btn");
+  if (id) {
+    const p = state.papers.find(x=>x.id===id);
+    document.getElementById("modal-title").textContent = "编辑 · " + p.short;
+    deleteBtn.style.display = "";
+    const pType = p.type||"paper";
+    document.getElementById("f-type").value = pType;
+    document.getElementById("f-type-display").textContent = pType === "product" ? "🏢 公司产品" : "📄 论文";
+    document.getElementById("f-cat").value = p.cat;
+    document.getElementById("f-short").value = p.short||"";
+    document.getElementById("f-title").value = p.title||"";
+    document.getElementById("f-note").value = p.note||"";
+    document.getElementById("f-venue").value = p.venue||"";
+    document.getElementById("f-venueType").value = p.venueType||"";
+    document.getElementById("f-ccf").value = p.ccf||"";
+    document.getElementById("f-venueTrack").value = p.venueTrack||"";
+    document.getElementById("f-arxiv").value = p.arxiv||"";
+    document.getElementById("f-pdf").value = p.pdf||"";
+    document.getElementById("f-url").value = p.url||"";
+    document.getElementById("f-thumb").value = p.thumb||"";
+    document.getElementById("f-org").value = p.org||"";
+    document.getElementById("f-orgType").value = p.orgType||"";
+    document.getElementById("f-star").checked = !!p.star;
+  } else {
+    document.getElementById("modal-title").textContent = "新增论文 / 产品";
+    deleteBtn.style.display = "none";
+    ["f-short","f-title","f-note","f-venue","f-arxiv","f-pdf","f-url","f-thumb","f-org"].forEach(i=>document.getElementById(i).value="");
+    document.getElementById("f-venueType").value = "";
+    document.getElementById("f-ccf").value = "";
+    document.getElementById("f-venueTrack").value = "";
+    document.getElementById("f-orgType").value = "";
+    document.getElementById("f-star").checked = false;
+  }
+  toggleTypeFields();
+  document.getElementById("modal-backdrop").classList.add("show");
+}
+
+function closeModal() {
+  document.getElementById("modal-backdrop").classList.remove("show");
+  editingId = null;
+}
+
+function toggleTypeFields() {
+  const type = document.getElementById("f-type").value;
+  document.getElementById("row-arxiv").style.display = type === "paper" ? "" : "none";
+  document.getElementById("row-url").style.display = type === "product" ? "" : "none";
+}
+function savePaper() {
+  const short = document.getElementById("f-short").value.trim();
+  const title = document.getElementById("f-title").value.trim();
+  if (!short||!title) { alert("简称和标题不能为空"); return; }
+  const venue = document.getElementById("f-venue").value.trim();
+  const venueType = document.getElementById("f-venueType").value || null;
+  const ccf = document.getElementById("f-ccf").value || inferCcfFromVenue(venue);
+  const venueTrack = document.getElementById("f-venueTrack").value || inferVenueTrack(venue, venueType);
+  const existing = editingId ? state.papers.find(x=>x.id===editingId) : null;
+  const data = {
+    id: editingId||(short.toLowerCase().replace(/[^a-z0-9]+/g,"-")+"-"+Date.now().toString(36)),
+    type: document.getElementById("f-type").value,
+    cat: document.getElementById("f-cat").value,
+    short, title,
+    note: document.getElementById("f-note").value.trim(),
+    venue: venue||null,
+    venueType,
+    venueTrack: venueTrack||null,
+    ccf: ccf||null,
+    arxiv: document.getElementById("f-arxiv").value.trim()||null,
+    url: document.getElementById("f-url").value.trim()||null,
+    pdf: document.getElementById("f-pdf").value.trim()||null,
+    thumb: document.getElementById("f-thumb").value.trim()||null,
+    org: document.getElementById("f-org").value.trim()||null,
+    orgType: document.getElementById("f-orgType").value||null,
+    star: document.getElementById("f-star").checked,
+  };
+  if (Array.isArray(existing?.tags)) data.tags = existing.tags;
+  if (existing && existing.rating !== undefined) data.rating = existing.rating;
+  if (existing && existing.readingNote !== undefined) data.readingNote = existing.readingNote;
+  if (existing && existing.readingNoteUpdatedAt !== undefined) data.readingNoteUpdatedAt = existing.readingNoteUpdatedAt;
+  if (editingId) {
+    const idx = state.papers.findIndex(x=>x.id===editingId);
+    if (idx>=0) state.papers[idx]=data;
+  } else {
+    state.papers.push(data);
+  }
+  saveData(); closeModal(); renderFilterBar(); render();
+}
+
+function deletePaper() {
+  if (!editingId) return;
+  const p = state.papers.find(x=>x.id===editingId);
+  if (!p||!confirm(`删除 "${p.short}" ?`)) return;
+  state.papers = state.papers.filter(x=>x.id!==editingId);
+  saveData(); closeModal(); renderFilterBar(); render();
+}
+
+// ── Category management ──
+function openCategoryModal() { renderCategoryList(); resetCatForm(); document.getElementById("cat-modal-backdrop").classList.add("show"); }
+function closeCategoryModal() { document.getElementById("cat-modal-backdrop").classList.remove("show"); }
+
+function renderCategoryList() {
+  document.getElementById("category-list").innerHTML = state.categories.map(c => {
+    const count = state.papers.filter(p=>p.cat===c.id).length;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:#0D1B2A;border:1px solid #1C3454;border-radius:4px;margin-bottom:6px;">
+      <span style="width:14px;height:14px;border-radius:50%;background:${c.color};flex-shrink:0;"></span>
+      <div style="flex:1;min-width:0;">
+        <div style="color:#FFFFFF;font-size:12.5px;font-weight:600;">${escapeHtml(c.title)} <span style="color:#4B7A9E;font-weight:400;font-size:11px;">(${count} 篇)</span></div>
+        <div style="color:#7BB8CC;font-size:11px;">${escapeHtml(c.tag)}</div>
+      </div>
+      <button class="icon-btn" onclick='editCategory(${JSON.stringify(c.id)})'>✎</button>
+      <button class="icon-btn danger" onclick='deleteCategory(${JSON.stringify(c.id)})'>✕</button>
+    </div>`;
+  }).join("");
+}
+
+function resetCatForm() {
+  document.getElementById("cat-edit-id").value="";
+  document.getElementById("cat-title").value=""; document.getElementById("cat-tag").value="";
+  document.getElementById("cat-color").value="#0AB5A8";
+  document.getElementById("cat-form-title").textContent="新增分类";
+  document.getElementById("cat-save-btn").textContent="添加";
+  document.getElementById("cat-title").focus();
+}
+
+function editCategory(id) {
+  const c = state.categories.find(x=>x.id===id); if (!c) return;
+  document.getElementById("cat-edit-id").value=c.id;
+  document.getElementById("cat-title").value=c.title; document.getElementById("cat-tag").value=c.tag;
+  document.getElementById("cat-color").value=c.color;
+  document.getElementById("cat-form-title").textContent="编辑分类 · "+c.title;
+  document.getElementById("cat-save-btn").textContent="保存修改";
+}
+
+function saveCategory() {
+  const editId = document.getElementById("cat-edit-id").value;
+  const title = document.getElementById("cat-title").value.trim();
+  const tag = document.getElementById("cat-tag").value.trim();
+  const color = document.getElementById("cat-color").value;
+  if (!title) { alert("类名不能为空"); return; }
+  if (editId) {
+    const c = state.categories.find(x=>x.id===editId);
+    if (c) { c.title=title; c.tag=tag; c.color=color; }
+  } else {
+    const id = "cat-" + Date.now().toString(36).slice(-4) + Math.random().toString(36).slice(2,5);
+    state.categories.push({id,title,tag,color});
+  }
+  saveData(); renderCategoryList(); resetCatForm(); populateCatSelect(); renderFilterBar(); render();
+}
+
+function deleteCategory(id) {
+  const c = state.categories.find(x=>x.id===id); if (!c) return;
+  const count = state.papers.filter(p=>p.cat===id).length;
+  if (count>0) {
+    const fallback = state.categories.find(x=>x.id!==id);
+    if (!fallback) { alert("至少保留一个分类"); return; }
+    if (!confirm(`"${c.title}" 下有 ${count} 篇论文，删除后将移动到 "${fallback.title}"，继续？`)) return;
+    state.papers.forEach(p=>{ if(p.cat===id) p.cat=fallback.id; });
+  } else {
+    if (!confirm(`删除分类 "${c.title}" ?`)) return;
+  }
+  state.categories = state.categories.filter(x=>x.id!==id);
+  if (activeFilter!=="all"&&!activeFilter.startsWith("type:")&&!state.categories.some(c=>c.id===activeFilter)) activeFilter="all";
+  saveData(); renderCategoryList(); populateCatSelect(); renderFilterBar(); render();
+}
+
+// ── Bulk select ──
+const bulkSelected = new Set();
+
+function toggleBulkSelect(id, checked) {
+  checked ? bulkSelected.add(id) : bulkSelected.delete(id);
+  const card = document.querySelector(`.card[data-id="${CSS.escape(id)}"]`);
+  if (card) card.classList.toggle("bulk-selected", checked);
+  updateBulkBar();
+}
+
+function updateBulkBar() {
+  const bar = document.getElementById("bulk-bar");
+  const n = bulkSelected.size;
+  bar.classList.toggle("show", n > 0);
+  document.getElementById("bulk-count").textContent = `已选 ${n} 篇`;
+  if (n > 0) {
+    const opts = state.categories.map(c => `<option value="${c.id}">${c.title}</option>`).join("");
+    document.getElementById("bulk-cat-select").innerHTML = opts;
+  }
+}
+
+function clearBulkSelect() {
+  bulkSelected.clear();
+  document.querySelectorAll(".card-check").forEach(cb => { cb.checked = false; });
+  document.querySelectorAll(".card.bulk-selected").forEach(c => c.classList.remove("bulk-selected"));
+  updateBulkBar();
+}
+
+function applyBulkCategory() {
+  if (!bulkSelected.size) return;
+  const newCat = document.getElementById("bulk-cat-select").value;
+  bulkSelected.forEach(id => {
+    const p = state.papers.find(x => x.id === id);
+    if (p) p.cat = newCat;
+  });
+  saveData(); renderFilterBar();
+  bulkSelected.clear(); updateBulkBar(); render();
+}
+
+// ── Init ──
+function handleEscape() {
+  if (document.getElementById("paper-note-backdrop").classList.contains("show")) closePaperNote();
+  else if (document.getElementById("paper-graph-backdrop").classList.contains("show")) closePaperGraph();
+  else if (document.getElementById("add-modal-backdrop").classList.contains("show")) closeAddModal();
+  else if (document.getElementById("modal-backdrop").classList.contains("show")) closeModal();
+  else if (bulkSelected.size) clearBulkSelect();
+  else if (app.classList.contains("split")) closePdf();
+}
+document.addEventListener("keydown", e=>{ if(e.key==="Escape") handleEscape(); });
+pdfFrame.addEventListener("load", () => {
+  try { const doc=pdfFrame.contentDocument; if(doc) doc.addEventListener("keydown",e=>{if(e.key==="Escape")handleEscape();}); } catch(_){}
+});
+document.getElementById("search").addEventListener("input", ()=>render());
+document.querySelectorAll("#view-toggle button").forEach(b=>{ b.onclick=()=>setViewMode(b.dataset.view); });
+document.getElementById("f-venue").addEventListener("change", ()=>maybeFillCcfFromVenue("f"));
+document.getElementById("f-venueType").addEventListener("change", ()=>maybeFillCcfFromVenue("f"));
+document.getElementById("a-venue").addEventListener("change", ()=>maybeFillCcfFromVenue("a"));
+document.getElementById("a-venueType").addEventListener("change", ()=>maybeFillCcfFromVenue("a"));
+document.getElementById("modal-backdrop").addEventListener("click",e=>{if(e.target.id==="modal-backdrop")closeModal();});
+document.getElementById("cat-modal-backdrop").addEventListener("click",e=>{if(e.target.id==="cat-modal-backdrop")closeCategoryModal();});
+document.getElementById("paper-graph-backdrop").addEventListener("click",e=>{if(e.target.id==="paper-graph-backdrop")closePaperGraph();});
+document.getElementById("paper-note-backdrop").addEventListener("click",e=>{if(e.target.id==="paper-note-backdrop")closePaperNote();});
+document.getElementById("paper-note-editor").addEventListener("input", schedulePaperNoteSave);
+
+window.openPdf=openPdf; window.openUrl=openUrl; window.openCiteUrl=openCiteUrl; window.closePdf=closePdf;
+window.changeCategory=changeCategory; window.toggleStar=toggleStar;
+window.setRatingFromClick=setRatingFromClick;
+window.selectGraphNode = function(id) { selectedGraphNodeId = id; render(); };
+window.openPaperGraph=openPaperGraph; window.closePaperGraph=closePaperGraph; window.refreshPaperGraph=refreshPaperGraph; window.selectPaperGraphNode=selectPaperGraphNode;
+window.openPaperNote=openPaperNote; window.closePaperNote=closePaperNote; window.wrapNoteSelection=wrapNoteSelection; window.prefixNoteLine=prefixNoteLine;
+window.openModal=openModal; window.closeModal=closeModal; window.savePaper=savePaper; window.deletePaper=deletePaper;
+window.openCategoryModal=openCategoryModal; window.closeCategoryModal=closeCategoryModal;
+window.editCategory=editCategory; window.saveCategory=saveCategory; window.deleteCategory=deleteCategory; window.resetCatForm=resetCatForm;
+window.toggleBulkSelect=toggleBulkSelect; window.applyBulkCategory=applyBulkCategory; window.clearBulkSelect=clearBulkSelect;
+
+// ── Add Modal ──
+let _addTab = "local";
+let _addPdf = null, _addThumb = null;
+let _addArxivMeta = null; // {arxiv, title, authors, year}
+
+function openAddModal() {
+  _addPdf = null; _addThumb = null; _addArxivMeta = null;
+  const catOpts = state.categories.map(c => `<option value="${c.id}">${c.title}</option>`).join("");
+  document.getElementById("a-cat").innerHTML = catOpts;
+  ["a-title","a-short","a-venue","a-org","a-note","a-arxiv-id","a-pdf","a-thumb","a-url-input"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("a-venueType").value = "";
+  document.getElementById("a-ccf").value = "";
+  document.getElementById("a-venueTrack").value = "";
+  document.getElementById("a-orgType").value = "";
+  document.getElementById("a-star").checked = false;
+  document.getElementById("a-arxiv-input").value = "";
+  document.getElementById("a-og-status").style.display = "none";
+  document.getElementById("a-og-preview").style.display = "none";
+  _resetArxivStatus();
+  _resetLocalUpload();
+  switchAddTab("local");
+  _updateAddSubmitBtn();
+  document.getElementById("add-modal-backdrop").classList.add("show");
+}
+function closeAddModal() { document.getElementById("add-modal-backdrop").classList.remove("show"); }
+
+function switchAddTab(tab) {
+  _addTab = tab;
+  document.querySelectorAll(".add-tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+  document.getElementById("add-tab-local").style.display = tab === "local" ? "" : "none";
+  document.getElementById("add-tab-arxiv").style.display = tab === "arxiv" ? "" : "none";
+  document.getElementById("add-tab-web").style.display = tab === "web" ? "" : "none";
+  // 公司产品 tab 隐藏 arXiv/PDF 字段
+  document.getElementById("a-arxiv-pdf-row").style.display = tab === "web" ? "none" : "";
+  // 根据 tab 设置默认机构类型（仅在未手动修改时覆盖）
+  const orgSel = document.getElementById("a-orgType");
+  if (tab === "web") {
+    if (!orgSel.value || orgSel.value === "school") orgSel.value = "company";
+  } else {
+    if (!orgSel.value || orgSel.value === "company") orgSel.value = "school";
+  }
+  _updateAddSubmitBtn();
+}
+
+function _updateAddSubmitBtn() {
+  const btn = document.getElementById("add-submit-btn");
+  let ready = false;
+  if (_addTab === "local") ready = !!_addPdf;
+  else if (_addTab === "arxiv") ready = !!_addArxivMeta;
+  else ready = true; // web — validate on submit
+  btn.disabled = !ready;
+  btn.style.opacity = ready ? "1" : "0.5";
+  btn.style.cursor = ready ? "pointer" : "not-allowed";
+}
+
+function _resetArxivStatus() {
+  const s = document.getElementById("a-arxiv-status");
+  s.style.display = "none"; s.textContent = "";
+  document.getElementById("a-arxiv-preview").style.display = "none";
+}
+
+function _resetLocalUpload() {
+  document.getElementById("add-file").value = "";
+  document.getElementById("add-upload-idle").style.display = "";
+  document.getElementById("add-upload-busy").style.display = "none";
+  document.getElementById("add-upload-done").style.display = "none";
+  document.getElementById("add-thumb-preview").style.display = "none";
+  document.getElementById("add-upload-zone").style.borderColor = "#1C3454";
+  document.getElementById("add-upload-idle").innerHTML =
+    `<div style="font-size:32px;margin-bottom:8px">📄</div>
+     <div style="color:#C2DCF0;font-size:13px;font-weight:600">点击选择 PDF，或拖拽到此处</div>`;
+}
+
+async function fetchArxiv() {
+  const raw = document.getElementById("a-arxiv-input").value.trim();
+  if (!raw) return;
+  const status = document.getElementById("a-arxiv-status");
+  const fetchBtn = document.getElementById("a-fetch-btn");
+  status.style.display = "";
+  status.style.background = "#0D1B2A";
+  status.style.color = "#F6C344";
+  status.textContent = "⟳ 正在获取元数据并下载 PDF...";
+  document.getElementById("a-arxiv-preview").style.display = "none";
+  fetchBtn.disabled = true;
+  _addArxivMeta = null;
+  _updateAddSubmitBtn();
+  try {
+    const res = await fetch("/api/arxiv", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: raw }),
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || "获取失败");
+    _addArxivMeta = data;
+    _addPdf = data.pdf; _addThumb = data.thumb;
+    // Fill optional fields from arXiv metadata
+    if (!document.getElementById("a-title").value) document.getElementById("a-title").value = data.title || "";
+    if (!document.getElementById("a-short").value && data.title) {
+      document.getElementById("a-short").value = data.title.split(/\s+/)[0].replace(/[^A-Za-z0-9]/g, "") || "";
+    }
+    if (!document.getElementById("a-arxiv-id").value) document.getElementById("a-arxiv-id").value = data.arxiv || "";
+    if (!document.getElementById("a-pdf").value && data.pdf) document.getElementById("a-pdf").value = data.pdf;
+    if (!document.getElementById("a-thumb").value && data.thumb) document.getElementById("a-thumb").value = data.thumb;
+    if (!document.getElementById("a-org").value && data.org) document.getElementById("a-org").value = data.org;
+    // Show preview
+    document.getElementById("a-preview-title").textContent = data.title || data.arxiv;
+    document.getElementById("a-preview-authors").textContent =
+      (data.authors || []).slice(0, 4).join(", ") + (data.authors?.length > 4 ? " et al." : "") +
+      (data.year ? "  (" + data.year + ")" : "");
+    const thumbWrap = document.getElementById("a-preview-thumb-wrap");
+    const thumbImg = document.getElementById("a-preview-thumb");
+    if (data.thumb) {
+      thumbImg.src = "references/thumbs/" + encodeURIComponent(data.thumb);
+      thumbWrap.style.display = "";
+    } else { thumbWrap.style.display = "none"; }
+    document.getElementById("a-arxiv-preview").style.display = "";
+    status.style.color = "#02C39A";
+    status.textContent = "✓ PDF 已下载，arXiv ID: " + data.arxiv;
+    _updateAddSubmitBtn();
+  } catch (e) {
+    status.style.color = "#F87171";
+    status.textContent = "✗ " + e.message;
+  } finally {
+    fetchBtn.disabled = false;
+  }
+}
+
+// Local PDF upload
+const _addUploadZone = document.getElementById("add-upload-zone");
+_addUploadZone.addEventListener("dragover", e => { e.preventDefault(); _addUploadZone.style.borderColor = "#02C39A"; });
+_addUploadZone.addEventListener("dragleave", () => { _addUploadZone.style.borderColor = "#1C3454"; });
+_addUploadZone.addEventListener("drop", async e => {
+  e.preventDefault(); _addUploadZone.style.borderColor = "#1C3454";
+  const f = e.dataTransfer.files[0];
+  if (f?.name.toLowerCase().endsWith(".pdf")) await _doLocalUpload(f);
+  else alert("请选择 PDF 文件");
+});
+document.getElementById("add-file").addEventListener("change", async e => {
+  const f = e.target.files[0]; if (f) await _doLocalUpload(f);
+});
+
+async function _doLocalUpload(file) {
+  document.getElementById("add-upload-idle").style.display = "none";
+  document.getElementById("add-upload-busy").style.display = "";
+  document.getElementById("add-upload-done").style.display = "none";
+  _addPdf = null; _addThumb = null;
+  _updateAddSubmitBtn();
+  try {
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/octet-stream", "X-Filename": encodeURIComponent(file.name) },
+      body: file,
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || "上传失败");
+    _addPdf = data.pdf; _addThumb = data.thumb;
+    document.getElementById("add-upload-busy").style.display = "none";
+    document.getElementById("add-upload-done").style.display = "";
+    const thumbImg = document.getElementById("add-thumb-preview");
+    if (data.thumb) { thumbImg.src = "references/thumbs/" + encodeURIComponent(data.thumb); thumbImg.style.display = ""; }
+    document.getElementById("add-done-name").textContent = "✓ " + data.pdf;
+    if (!document.getElementById("a-pdf").value) document.getElementById("a-pdf").value = data.pdf || "";
+    if (data.thumb && !document.getElementById("a-thumb").value) document.getElementById("a-thumb").value = data.thumb;
+    // Auto-fill title: prefer server-extracted, fall back to filename hint
+    if (!document.getElementById("a-title").value) {
+      if (data.title) {
+        document.getElementById("a-title").value = data.title;
+      } else {
+        const stem = file.name.replace(/\.pdf$/i, "");
+        const hint = stem.replace(/\b\d{4}\.\d{4,5}(v\d+)?\b/g, "").replace(/[_\-]+/g, " ").trim();
+        if (hint) document.getElementById("a-title").value = hint;
+      }
+    }
+    if (data.org && !document.getElementById("a-org").value) document.getElementById("a-org").value = data.org;
+    if (data.arxiv && !document.getElementById("a-arxiv-id").value) document.getElementById("a-arxiv-id").value = data.arxiv;
+    // 从标题推断简称
+    if (!document.getElementById("a-short").value) {
+      const tv = document.getElementById("a-title").value;
+      if (tv) document.getElementById("a-short").value = tv.split(/\s+/)[0].replace(/[^A-Za-z0-9]/g, "") || "";
+    }
+    _updateAddSubmitBtn();
+  } catch (e) {
+    document.getElementById("add-upload-busy").style.display = "none";
+    document.getElementById("add-upload-idle").style.display = "";
+    document.getElementById("add-upload-idle").innerHTML =
+      `<div style="color:#F87171;margin-bottom:6px">✗ ${escapeHtml(e.message)}</div><div style="color:#4B7A9E;font-size:11px">点击重试</div>`;
+  }
+}
+
+async function submitAdd() {
+  const cat = document.getElementById("a-cat").value || state.categories[0]?.id || "";
+  const venue = document.getElementById("a-venue").value.trim();
+  const venueType = document.getElementById("a-venueType").value || null;
+  const ccf = document.getElementById("a-ccf").value || inferCcfFromVenue(venue);
+  const venueTrack = document.getElementById("a-venueTrack").value || inferVenueTrack(venue, venueType);
+
+  if (_addTab === "web") {
+    const url = document.getElementById("a-url-input").value.trim();
+    if (!url) { alert("请填写产品/公司链接"); return; }
+    let short = document.getElementById("a-short").value.trim();
+    let title = document.getElementById("a-title").value.trim();
+    if (!short || !title) {
+      try {
+        const host = new URL(url.startsWith("http") ? url : "https://" + url).hostname.replace(/^www\./, "");
+        short = short || host.split(".")[0];
+        title = title || short;
+      } catch (_) { short = short || "web"; title = title || short; }
+    }
+    state.papers.push({
+      id: short.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now().toString(36),
+      type: "product", cat, short, title, star: document.getElementById("a-star").checked,
+      note: document.getElementById("a-note").value.trim() || null,
+      venue: venue || null,
+      venueType,
+      venueTrack: venueTrack || null,
+      ccf: ccf || null,
+      arxiv: null, pdf: null, url,
+      thumb: document.getElementById("a-thumb").value.trim() || null,
+      org: document.getElementById("a-org").value.trim() || null,
+      orgType: document.getElementById("a-orgType").value || null,
+      rating: null,
+      readingNote: "",
+    });
+  } else {
+    // local PDF or arXiv
+    const titleRaw = document.getElementById("a-title").value.trim();
+    const stem = _addPdf ? _addPdf.replace(/\.pdf$/i, "") : "";
+    const title = titleRaw || (_addArxivMeta?.title) || stem.replace(/[_\-]+/g, " ").trim();
+    const shortRaw = document.getElementById("a-short").value.trim();
+    const short = shortRaw || title.split(/\s+/)[0].replace(/[^A-Za-z0-9]/g, "") || stem;
+    state.papers.push({
+      id: short.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now().toString(36),
+      type: "paper", cat, short, title, star: document.getElementById("a-star").checked,
+      note: document.getElementById("a-note").value.trim() || null,
+      venue: venue || null,
+      venueType,
+      venueTrack: venueTrack || null,
+      ccf: ccf || null,
+      arxiv: document.getElementById("a-arxiv-id").value.trim() || _addArxivMeta?.arxiv || null,
+      pdf: document.getElementById("a-pdf").value.trim() || _addPdf || null,
+      url: null,
+      thumb: document.getElementById("a-thumb").value.trim() || _addThumb || null,
+      org: document.getElementById("a-org").value.trim() || null,
+      orgType: document.getElementById("a-orgType").value || null,
+      rating: null,
+      readingNote: "",
+    });
+  }
+  await saveData(); closeAddModal(); renderFilterBar(); render();
+}
+
+document.getElementById("add-modal-backdrop").addEventListener("click", e => {
+  if (e.target.id === "add-modal-backdrop") closeAddModal();
+});
+
+async function fetchOgImage() {
+  const url = document.getElementById("a-url-input").value.trim();
+  if (!url) return;
+  const status = document.getElementById("a-og-status");
+  const btn = document.getElementById("a-og-btn");
+  status.style.display = "";
+  status.style.background = "#0D1B2A";
+  status.style.color = "#F6C344";
+  status.textContent = "⟳ 正在获取页面缩略图...";
+  document.getElementById("a-og-preview").style.display = "none";
+  btn.disabled = true;
+  try {
+    const res = await fetch("/api/fetch-og", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url }),
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || "获取失败");
+    if (!document.getElementById("a-thumb").value && data.thumb) document.getElementById("a-thumb").value = data.thumb;
+    if (data.thumb) {
+      document.getElementById("a-og-thumb").src = "references/thumbs/" + encodeURIComponent(data.thumb);
+      document.getElementById("a-og-preview").style.display = "";
+    }
+    if (!document.getElementById("a-title").value && data.title) document.getElementById("a-title").value = data.title;
+    if (!document.getElementById("a-org").value && data.org) document.getElementById("a-org").value = data.org;
+    if (!document.getElementById("a-short").value) {
+      const name = data.org || data.title || "";
+      if (name) document.getElementById("a-short").value = name.split(/[\s\-_]+/)[0].replace(/[^A-Za-z0-9]/g, "");
+    }
+    status.style.color = "#02C39A";
+    status.textContent = "✓ 缩略图已下载";
+  } catch (e) {
+    status.style.color = "#F87171";
+    status.textContent = "✗ " + e.message + "（可手动填写缩略图文件名）";
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+window.openAddModal = openAddModal;
+window.closeAddModal = closeAddModal;
+window.fetchArxiv = fetchArxiv;
+window.fetchOgImage = fetchOgImage;
+window.submitAdd = submitAdd;
+window.switchAddTab = switchAddTab;
+
+loadData();
+</script>
+</body>
+</html>

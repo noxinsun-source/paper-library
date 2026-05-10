@@ -1,0 +1,63 @@
+{
+  "ok": true,
+  "source": "OpenAlex",
+  "version": 2,
+  "paperId": "hirag",
+  "builtAt": "2026-05-09T21:09:50",
+  "papersMtime": 1778309189.3970711,
+  "center": {
+    "id": "hirag",
+    "kind": "center",
+    "local": true,
+    "paperId": "hirag",
+    "short": "HiRAG",
+    "title": "Retrieval-Augmented Generation with Hierarchical Knowledge",
+    "category": "多粒度 GraphRAG",
+    "color": "#E879F9",
+    "venue": "EMNLP Findings",
+    "ccf": "B",
+    "url": "https://aclanthology.org/2025.findings-emnlp.321/",
+    "arxiv": "2503.10150",
+    "openalex": "W4416034986",
+    "openalexUrl": "https://openalex.org/W4416034986",
+    "doi": "https://doi.org/10.18653/v1/2025.findings-emnlp.321",
+    "citationCount": 4,
+    "publicationYear": 2025,
+    "sourceName": null,
+    "pdfUrl": null,
+    "matchMethod": "title:1.00",
+    "resolved": true
+  },
+  "nodes": [
+    {
+      "id": "hirag",
+      "kind": "center",
+      "local": true,
+      "paperId": "hirag",
+      "short": "HiRAG",
+      "title": "Retrieval-Augmented Generation with Hierarchical Knowledge",
+      "category": "多粒度 GraphRAG",
+      "color": "#E879F9",
+      "venue": "EMNLP Findings",
+      "ccf": "B",
+      "url": "https://aclanthology.org/2025.findings-emnlp.321/",
+      "arxiv": "2503.10150",
+      "openalex": "W4416034986",
+      "openalexUrl": "https://openalex.org/W4416034986",
+      "doi": "https://doi.org/10.18653/v1/2025.findings-emnlp.321",
+      "citationCount": 4,
+      "publicationYear": 2025,
+      "sourceName": null,
+      "pdfUrl": null,
+      "matchMethod": "title:1.00",
+      "resolved": true
+    }
+  ],
+  "edges": [],
+  "references": [],
+  "stats": {
+    "referenceCount": 0,
+    "localReferenceCount": 0,
+    "externalReferenceCount": 0
+  }
+}

@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# Start the paper library server in the background.
+# Usage: bash start.sh [port]
+
+PORT="${1:-8765}"
+DIR="$(cd "$(dirname "$0")" && pwd)"
+LOGFILE="$DIR/.server.log"
+PIDFILE="$DIR/.server.pid"
+PYTHON_BIN="${PYTHON:-python3}"
+
+if [ -x "$DIR/.venv/bin/python" ]; then
+  PYTHON_BIN="$DIR/.venv/bin/python"
+fi
+
+archive_pidfile() {
+  local reason="$1"
+  local archived="$DIR/.server.pid.$reason.$(date +%Y%m%d_%H%M%S).$$"
+  mv "$PIDFILE" "$archived"
+}
+
+# Kill any previous instance
+if [ -f "$PIDFILE" ]; then
+  OLD_PID=$(cat "$PIDFILE")
+  kill "$OLD_PID" 2>/dev/null && echo "Stopped previous server (PID $OLD_PID)"
+  archive_pidfile "previous"
+fi
+
+# Start in background
+nohup "$PYTHON_BIN" "$DIR/server.py" "$PORT" > "$LOGFILE" 2>&1 &
+echo $! > "$PIDFILE"
+PID=$!
+disown "$PID" 2>/dev/null || true
+
+sleep 1
+
+# Verify the server actually started
+if ! kill -0 "$PID" 2>/dev/null; then
+  echo ""
+  echo "  ❌ Server failed to start. Error:"
+  cat "$LOGFILE"
+  archive_pidfile "failed"
+  exit 1
+fi
+
+echo ""
+echo "  ✅ Paper Library 已启动！"
+echo ""
+echo "  👉 在浏览器中打开：http://localhost:$PORT"
+echo ""
+echo "  停止服务：bash stop.sh"
+echo "  查看日志：$LOGFILE"
+echo ""
