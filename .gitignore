@@ -1,22 +1,20 @@
-# PDF files (large, user-specific)
-references/*.pdf
+# Dependencies
+node_modules/
 
-# Thumbnails (auto-generated)
-references/thumbs/*.png
-references/thumbs/*.jpg
+# Generated files
+generate_html.js
+generate_html_safe.js
+index.html.bak
 
-# Auto-backups
-.backup/
-
-# macOS
+# OS files
 .DS_Store
+Thumbs.db
 
-# Server runtime files
-.server.pid
-.server.pid.*
-.server.log
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 
-# Python
-.venv/
-__pycache__/
-*.pyc
+# Logs
+*.log
